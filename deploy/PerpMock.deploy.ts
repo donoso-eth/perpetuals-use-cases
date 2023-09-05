@@ -13,7 +13,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(
       `Deploying PerpMock to ${hre.network.name}. Hit ctrl + c to abort`
     );
-    await sleep(5000);
+   
   }
 
  const perp =  await deploy("PerpMock", {

@@ -3,9 +3,9 @@ import { task } from "hardhat/config";
 export const verify = task("etherscan-verify", "verify").setAction(
   async ({}, hre) => {
     await hre.run("verify:verify", {
-      address: "0x7c0d464B21552F3B8e0FDA2C74798e54CA0cAF7B",
+      address: "0x17E2b1AED9CA9A5E63ff7b4736cE7657b28EB8f8",
       constructorArguments: [
-        "0xcc53666e25bf52c7c5bc1e8f6e1f6bf58e871659",
+        "0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
         "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
       ],
     });

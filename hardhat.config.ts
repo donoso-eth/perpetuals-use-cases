@@ -15,6 +15,7 @@ const PK = process.env.PK;
 const ALCHEMY_ID = process.env.ALCHEMY_ID;
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
+
 // HardhatUserConfig bug
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const config: HardhatUserConfig = {
@@ -30,22 +31,24 @@ const config: HardhatUserConfig = {
       default: 0,
     },
     gelatoMsgSender: {
-      hardhat: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
+      hardhat: "0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
       mumbai: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
       polygon: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
+      arbitrium:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225"
     },
     pyth: {
       hardhat: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
       mumbai: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
       polygon: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+      arbitrium:"0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
     },
   },
-  defaultNetwork: "mumbai",
+  defaultNetwork: "hardhat",
 
   networks: {
     hardhat: {
       forking: {
-        url: `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_ID}`,
+        url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
        // blockNumber: 35241432,
       },
     },
@@ -65,6 +68,11 @@ const config: HardhatUserConfig = {
       chainId: 137,
       url: "https://polygon-rpc.com",
     },
+    arbitrium:{
+      url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+      accounts: PK ? [PK] : [],
+      chainId: 42161,
+    }
   },
 
   solidity: {

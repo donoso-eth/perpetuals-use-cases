@@ -10,16 +10,14 @@ import { fastForwardTime, getTimeStampNow } from "../utils";
 import { Log } from "@ethersproject/providers";
 import { getLogs } from "../utils/getLogs";
 import {
-  Web3FunctionUserArgs,
-  Web3FunctionResultV2,
   Web3FunctionResultCallData,
 } from "@gelatonetwork/web3-functions-sdk";
 import { Web3FunctionHardhat } from "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
-import { sleep } from "../../web3-functions/utils";
+
 
 const { ethers, deployments, w3f } = hre;
 
-describe("PerpMock set Orders contract tests", function () {
+describe("PerpMock Conditional contract tests", function () {
   let admin: Signer; // proxyAdmin
   let adminAddress: string;
   let perpMock: PerpMock;
@@ -53,104 +51,40 @@ describe("PerpMock set Orders contract tests", function () {
   
 
   });
-  it("PerpMock.updatePrice: correct", async () => { 
-    await perpMock.setOrder(2);
-    await perpMock.setOrder(3);
 
-
-    let currentBlock = await hre.ethers.provider.getBlockNumber();
-    let lastBlock = genesisBlock;
-   
-
-    const topics = [
-      perpMock.interface.getEventTopic(
-        "setOrderEvent(uint256 timestamp, uint256 orderId)"
-      ),
-    ];
-
-    const logs: Log[] = await getLogs(
-      lastBlock,
-      currentBlock,
-      perpMock.address,
-      topics,
-      hre.ethers.provider
-    );
-
-    // Parse retrieved events
-    console.log(`Matched ${logs.length} new events`);
-
-    let newestTimeStamp = 0;
-    for (const log of logs) {
-      const event = perpMock.interface.parseLog(log);
-      const [timestamp, orderId] = event.args;
-  
-      if (+timestamp.toString() > newestTimeStamp)
-        newestTimeStamp = +timestamp.toString();
-    }
-
-    let olderThantimestamp = newestTimeStamp + 12;
-
+  it("w3f executes", async () => { 
     const connection = new EvmPriceServiceConnection(
       "https://xc-mainnet.pyth.network"
     );
 
     const priceIds = [
-      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id inmainet
+      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in testnet
     ];
 
     const check = (await connection.getLatestPriceFeeds(priceIds)) as any[];
 
-    if (check[0].price.publishTime >= olderThantimestamp) {
-
-      const priceUpdateData = await connection.getPriceFeedsUpdateData(
-        priceIds
-      );
-
-    let userArgs = {
-      "PerpMock": perpMock.address,
-      "priceIds": [
-        "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
-      ],
-      "genesisBlock": genesisBlock
-      };
-
-    let storage = {
-      };
-  
-     let  lensGelatoW3f = w3f.get("lensChatGPT");
-      let { result } = await lensGelatoW3f.run({ userArgs, storage });
+    let price1 = Math.floor(check[0].price.price*0.95);
+    let price2 = Math.floor(check[0].price.price*1.05);
 
 
-      await perpMock
-        .connect(gelatoMsgSenderSigner)
-        .updatePriceOrders(priceUpdateData, [1, 2],check[0].price.publishTime);
-      const order = await perpMock.getOrder(1);
-      expect(order.publishTime).to.eq(check[0].price.publishTime);
-    } else {
-      console.log("not elapsed");
-    }
-
-  })
-  it("w3f executes", async () => { 
-      await perpMock.setOrder(2);
-      await perpMock.setOrder(3);
-  
-      await sleep(10000);
+    await perpMock.setConditionalOrder(100,price1,true)
+    await perpMock.setConditionalOrder(200,price2,true)
+    await perpMock.setConditionalOrder(300,price1,false)
+    await perpMock.setConditionalOrder(400,price2,false)
 
     let userArgs = {
       "perpMock": perpMock.address,
       "priceIds": ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],
       "genesisBlock": genesisBlock.toString(),
-      "delay":"12"
       };
 
     let storage = {
      // remainingOrders:  `{"orders":[{"timestamp":1693385398,"orderId":1},{"timestamp":1693385399,"orderId":2}]}`
       };
   
-     let oracleKeeperW3f:Web3FunctionHardhat = w3f.get("oracle-keeper");
+     let oracleKeeperW3f:Web3FunctionHardhat = w3f.get("trigger-order");
      let  w3frun  = await oracleKeeperW3f.run({ userArgs, storage });
-
+  
 
     let result = w3frun.result;
     
@@ -162,8 +96,14 @@ describe("PerpMock set Orders contract tests", function () {
         data: data.data,
         to:  data.to 
       })
-    let order = await perpMock.getOrder(1);
-  
+    let order1 = await perpMock.getConditionalOrder(1);
+     expect (order1.publishTime).not.equal(0)
+     let order2 = await perpMock.getConditionalOrder(2);
+     expect (order2.publishTime).equal(0)
+     let order3 = await perpMock.getConditionalOrder(3);
+     expect (order3.publishTime).equal(0)
+     let order4 = await perpMock.getConditionalOrder(4);
+     expect (order4.publishTime).not.equal(0)
     }
 
 
@@ -175,10 +115,11 @@ describe("PerpMock set Orders contract tests", function () {
       "https://xc-mainnet.pyth.network"
     );
     const priceIds = [
-      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in mainnet
+      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in testnet
     ];
+
     const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
-    await expect(perpMock.updatePriceOrders(priceUpdateData, [],1222)).to.be.revertedWith(
+    await expect(perpMock.connect(admin).updatePriceConditionalOrders(priceUpdateData, [],123)).to.be.revertedWith(
       "Only dedicated gelato msg.sender"
     );
   });
@@ -205,8 +146,9 @@ describe("PerpMock set Orders contract tests", function () {
     );
 
     const priceIds = [
-      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in mainnet
+      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in testnet
     ];
+
 
     const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 

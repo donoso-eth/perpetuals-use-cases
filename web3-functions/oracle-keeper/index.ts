@@ -7,7 +7,7 @@ import { BigNumber, Contract, utils } from "ethers";
 
 import { EvmPriceServiceConnection, PriceFeed } from "@pythnetwork/pyth-evm-js";
 import { getLogs } from "../../test/utils/getLogs";
-import { perMockAbi } from "../../test/oracle-keeper/perpMockAbi";
+import { perpMockAbi } from "../abi/perpMockAbi";
 
 
 interface IPRICE {
@@ -34,13 +34,12 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const remainingOrders:{orders:Array<{timestamp: number, orderId:number}>} =   JSON.parse(
     (await storage.get("remainingOrders")) ?? `{"orders":[]}`
   );
-  console.log(remainingOrders.orders);
 
- const perpMockContract = new Contract(perpMock, perMockAbi, provider);
+ const perpMockContract = new Contract(perpMock, perpMockAbi, provider);
 
   // Get Pyth price data
   const connection = new EvmPriceServiceConnection(
-    "https://xc-testnet.pyth.network"
+    "https://xc-mainnet.pyth.network"
   ); // See Price Service endpoints section below for other endpoints
 
   const topics = [
@@ -52,12 +51,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const currentBlock = await provider.getBlockNumber();
   let logs = await getLogs(lastProcessedBlock, currentBlock,perpMock,topics,provider );
  
-
   const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];
 
-
   const priceObject = check[0].toJson().price;
-
 
 
   if (
@@ -69,8 +65,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   }
 
   let price:IPRICE = {
-    price:+priceObject.price,
-    publishTime: priceObject.publish_time
+    price:+priceObject.price.toString(),
+    publishTime: +priceObject.publish_time.toString()
   } 
 
   let orders:Array<{timestamp: number, orderId:number}> = [];
@@ -86,8 +82,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
  let ordersTooEarly:Array<{timestamp: number, orderId:number}> = [];
 
   for (const order of orders) {
-    if (order.timestamp + delay <= +price.publishTime.toString()){
-      ordersReady.push(+order.orderId.toString());  
+    console.log(order.timestamp + delay,price.publishTime, order.orderId)
+    if (order.timestamp + delay <= price.publishTime){
+      ordersReady.push(order.orderId);  
   } else {
     ordersTooEarly.push({timestamp:order.timestamp, orderId:order.orderId})
   }
@@ -103,9 +100,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   
     const updatePriceData = await connection.getPriceFeedsUpdateData(priceIds);
 
-    console.log("Web3 Function price initialization");
-
-    const callData = perpMockContract.interface.encodeFunctionData("updatePrice", [updatePriceData,ordersReady]);
+    const callData = perpMockContract.interface.encodeFunctionData("updatePriceOrders", [updatePriceData,ordersReady,price.publishTime],);
     return {
       canExec: true,
       callData: [
@@ -116,6 +111,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       ],
     };
   } else {
+    if (ordersTooEarly.length > 1){
+      console.log(` orders too early: ${ordersTooEarly.length}`)
+    }
     return {
       canExec:false,
       message: "Not orders to settle"
