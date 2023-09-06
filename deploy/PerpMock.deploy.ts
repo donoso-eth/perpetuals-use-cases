@@ -7,7 +7,11 @@ const isHardhat = hre.network.name === "hardhat";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy } = deployments;
-  const { deployer, gelatoMsgSender, pyth } = await getNamedAccounts();
+
+  const { deployer, gelatoMsgSender, pyth} = await getNamedAccounts();
+
+
+
 
   if (!isHardhat) {
     console.log(
@@ -16,9 +20,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
    
   }
 
+  const sessionKey = await deploy("SessionKeyGate", {
+    from:deployer,
+    args:["0xd8253782c45a12053594b9deB72d8e8aB2Fca54c"]
+  })
+  
+  const sessionKeyAddress = sessionKey.address
+
  const perp =  await deploy("PerpMock", {
     from: deployer,
-    args: [gelatoMsgSender, pyth],
+    args: [gelatoMsgSender, pyth,sessionKeyAddress],
     log: true,
   });
 

@@ -25,7 +25,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const priceIds = (userArgs.priceIds ?? "") as string[];
   const genesisBlock = +(userArgs.genesisBlock ?? ("0" as string));  
   const delay= +((userArgs.delay as string) ?? "12");
-
+  const server= userArgs.server as string ?? "mainnet";
 
   // User Storage
   const lastProcessedBlock = +((await storage.get("lastProcessedBlock")) ?? genesisBlock);
@@ -39,7 +39,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Get Pyth price data
   const connection = new EvmPriceServiceConnection(
-    "https://xc-mainnet.pyth.network"
+    `https://xc-${server}.pyth.network`
   ); // See Price Service endpoints section below for other endpoints
 
   const topics = [

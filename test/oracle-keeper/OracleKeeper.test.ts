@@ -10,12 +10,12 @@ import { fastForwardTime, getTimeStampNow } from "../utils";
 import { Log } from "@ethersproject/providers";
 import { getLogs } from "../utils/getLogs";
 import {
-  Web3FunctionUserArgs,
-  Web3FunctionResultV2,
+
   Web3FunctionResultCallData,
 } from "@gelatonetwork/web3-functions-sdk";
 import { Web3FunctionHardhat } from "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
 import { sleep } from "../../web3-functions/utils";
+import { priceFeedPyth, serverPyth } from "../constants";
 
 const { ethers, deployments, w3f } = hre;
 
@@ -25,6 +25,9 @@ describe("PerpMock set Orders contract tests", function () {
   let perpMock: PerpMock;
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
+  let server = serverPyth;
+  let priceFeed:string = priceFeedPyth
+
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
       console.error("Test Suite is meant to be run on hardhat only");
@@ -37,7 +40,7 @@ describe("PerpMock set Orders contract tests", function () {
 
     adminAddress = await admin.getAddress();
     await setBalance(adminAddress, ethers.utils.parseEther("1000"));
-    const { gelatoMsgSender: gelatoMsgSender } = await hre.getNamedAccounts();
+    const { gelatoMsgSender } = await hre.getNamedAccounts();
     gelatoMsgSenderSigner = await ethers.getSigner(gelatoMsgSender);
 
     perpMock = (await ethers.getContractAt(
@@ -91,11 +94,11 @@ describe("PerpMock set Orders contract tests", function () {
     let olderThantimestamp = newestTimeStamp + 12;
 
     const connection = new EvmPriceServiceConnection(
-      "https://xc-mainnet.pyth.network"
+      `https://xc-${server}.pyth.network`
     );
 
     const priceIds = [
-      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id inmainet
+      priceFeed, // ETH/USD price id inmainet
     ];
 
     const check = (await connection.getLatestPriceFeeds(priceIds)) as any[];
@@ -109,9 +112,10 @@ describe("PerpMock set Orders contract tests", function () {
     let userArgs = {
       "PerpMock": perpMock.address,
       "priceIds": [
-        "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+        priceFeed
       ],
-      "genesisBlock": genesisBlock
+      "genesisBlock": genesisBlock,
+      server: serverPyth
       };
 
     let storage = {
@@ -135,13 +139,14 @@ describe("PerpMock set Orders contract tests", function () {
       await perpMock.setOrder(2);
       await perpMock.setOrder(3);
   
-      await sleep(10000);
+
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],
+      "priceIds": [priceFeed],
       "genesisBlock": genesisBlock.toString(),
-      "delay":"12"
+      "delay":"12",
+      server: serverPyth
       };
 
     let storage = {
@@ -172,10 +177,10 @@ describe("PerpMock set Orders contract tests", function () {
   it("PerpMock.updatePrice: onlyGelatoMsgSender", async () => {
     // Arbitrary bytes array
     const connection = new EvmPriceServiceConnection(
-      "https://xc-mainnet.pyth.network"
+      `https://xc-${server}.pyth.network`
     );
     const priceIds = [
-      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in mainnet
+      priceFeed, // ETH/USD price id in mainnet
     ];
     const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
     await expect(perpMock.updatePriceOrders(priceUpdateData, [],1222)).to.be.revertedWith(
@@ -201,11 +206,11 @@ describe("PerpMock set Orders contract tests", function () {
 
   it("PerpMock.updatePrice: should update price correctly", async () => {
     const connection = new EvmPriceServiceConnection(
-      "https://xc-mainnet.pyth.network"
+      `https://xc-${server}.pyth.network`
     );
 
     const priceIds = [
-      "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price id in mainnet
+      priceFeed, // ETH/USD price id in mainnet
     ];
 
     const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);

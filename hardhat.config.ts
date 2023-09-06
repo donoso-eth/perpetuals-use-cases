@@ -34,21 +34,26 @@ const config: HardhatUserConfig = {
       hardhat: "0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
       mumbai: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
       polygon: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
-      arbitrium:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225"
+      arbitrium:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
+      arbitriumGoerli:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225"
     },
     pyth: {
       hardhat: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
       mumbai: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
       polygon: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
-      arbitrium:"0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
+      arbitrium:"0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
+      arbitriumGoerli:"0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
     },
+
+
   },
-  defaultNetwork: "hardhat",
+  defaultNetwork: "arbitriumGoerli",
 
   networks: {
     hardhat: {
       forking: {
-        url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+        //url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
+        url:`https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_ID}`,
        // blockNumber: 35241432,
       },
     },
@@ -72,6 +77,11 @@ const config: HardhatUserConfig = {
       url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
       accounts: PK ? [PK] : [],
       chainId: 42161,
+    },
+    arbitriumGoerli:{
+      url:`https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_ID}`,
+      accounts: PK ? [PK] : [],
+      chainId: 421613,
     }
   },
 

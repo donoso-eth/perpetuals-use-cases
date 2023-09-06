@@ -8,7 +8,7 @@ import { BigNumber, Contract, utils } from "ethers";
 import { EvmPriceServiceConnection, PriceFeed } from "@pythnetwork/pyth-evm-js";
 import { getLogs } from "../../test/utils/getLogs";
 import { perpMockAbi } from "../abi/perpMockAbi";
-import { timeStamp } from "console";
+
 
 interface IPRICE {
   price: number;
@@ -30,7 +30,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const perpMock = (userArgs.perpMock as string) ?? "";
   const priceIds = (userArgs.priceIds ?? "") as string[];
   const genesisBlock = +(userArgs.genesisBlock ?? ("0" as string));
-
+  const server= userArgs.server as string ?? "mainnet";
   // User Storage
   const lastProcessedBlock = +(
     (await storage.get("lastProcessedBlock")) ?? genesisBlock
@@ -46,7 +46,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Get Pyth price data
   const connection = new EvmPriceServiceConnection(
-    "https://xc-mainnet.pyth.network"
+    `https://xc-${server}.pyth.network`
   ); // See Price Service endpoints section below for other endpoints
 
   const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];

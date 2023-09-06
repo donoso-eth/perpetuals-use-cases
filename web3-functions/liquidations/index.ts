@@ -37,6 +37,8 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const collateralThreshold = +(
     userArgs.collateralThreshold ?? ("50" as string)
   );
+  const server= userArgs.server as string ?? "mainnet";
+  
     console.log('lastProces: ' , await storage.get("lastProcessedBlock"))
   // User Storage
   const lastProcessedBlock = +(
@@ -56,7 +58,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Get Pyth price data
   const connection = new EvmPriceServiceConnection(
-    "https://xc-mainnet.pyth.network"
+    `https://xc-${server}.pyth.network`
   );
   const currentBlock = await provider.getBlockNumber();
 

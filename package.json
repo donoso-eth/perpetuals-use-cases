@@ -61,6 +61,9 @@
     "*.*{ts,js}": "eslint -c .eslintrc.json"
   },
   "dependencies": {
+    "@gelatonetwork/relay-context": "^3.1.1",
+    "@gelatonetwork/relay-sdk": "^5.2.0",
+    "@noble/curves": "^1.2.0",
     "@openzeppelin/contracts": "^4.9.0",
     "@pythnetwork/pyth-evm-js": "^1.16.1",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.1"

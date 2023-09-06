@@ -9,8 +9,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import {Context} from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import {
+    ERC2771Context
+} from "@gelatonetwork/relay-context/contracts/vendor/ERC2771Context.sol";
 
-contract PerpMock is Ownable, Pausable {
+contract PerpMock is ERC2771Context, Pausable, Ownable {
     struct Order {
         uint256 timestamp;
         uint256 amount;
@@ -20,6 +24,8 @@ contract PerpMock is Ownable, Pausable {
         uint256 leverage;
     }
 
+ 
+
     IPyth private _pyth;
     mapping(uint256 => int64) priceByTimestamp;
 
@@ -27,14 +33,14 @@ contract PerpMock is Ownable, Pausable {
     uint256 public orderId;
     mapping(uint256 => Order) public ordersByOrderId;
     mapping(address => uint256[]) public ordersByUser;
-    mapping(address => uint256) nrOrdersByUser;
+    mapping(address => uint256) public nrOrdersByUser;
     event setOrderEvent(uint256 timestamp, uint256 orderId);
 
     // Conditional Orders
     uint256 public conditionalOrderId;
     mapping(uint256 => Order) public conditionalOrdersByOrderId;
     mapping(address => uint256[]) public conditionalOrdersByUser;
-    mapping(address => uint256) nrConditionalOrdersByUser;
+    mapping(address => uint256) public nrConditionalOrdersByUser;
     event setConditionalOrderEvent(
         uint256 timestamp,
         uint256 orderId,
@@ -46,7 +52,7 @@ contract PerpMock is Ownable, Pausable {
     uint256 public marginTradeId;
     mapping(uint256 => Order) public marginTradesByOrderId;
     mapping(address => uint256[]) public marginTradesByUser;
-    mapping(address => uint256) nrMarginTradesByUser;
+    mapping(address => uint256) public nrMarginTradesByUser;
     event marginTradeEvent(
         uint256 timestamp,
         uint256 orderId,
@@ -65,9 +71,10 @@ contract PerpMock is Ownable, Pausable {
         _;
     }
 
-    constructor(address _gelatoMsgSender, address pythContract) {
+    constructor(address _gelatoMsgSender, address pythContract, address _trustedForwarder)ERC2771Context(_trustedForwarder) {
         gelatoMsgSender = _gelatoMsgSender;
         _pyth = IPyth(pythContract);
+      
     }
 
     /* solhint-disable-next-line no-empty-blocks */
@@ -84,8 +91,8 @@ contract PerpMock is Ownable, Pausable {
             true,
             0
         );
-        ordersByUser[msg.sender].push(orderId);
-        nrOrdersByUser[msg.sender] += 1;
+        ordersByUser[_msgSender()].push(orderId);
+        nrOrdersByUser[_msgSender()] += 1;
         emit setOrderEvent(block.timestamp, orderId);
     }
 
@@ -128,8 +135,8 @@ contract PerpMock is Ownable, Pausable {
             _above,
             0
         );
-        conditionalOrdersByUser[msg.sender].push(conditionalOrderId);
-        nrConditionalOrdersByUser[msg.sender] += 1;
+        conditionalOrdersByUser[_msgSender()].push(conditionalOrderId);
+        nrConditionalOrdersByUser[_msgSender()] += 1;
         emit setConditionalOrderEvent(
             block.timestamp,
             conditionalOrderId,
@@ -172,8 +179,8 @@ contract PerpMock is Ownable, Pausable {
             false,
             _leverage
         );
-        marginTradesByUser[msg.sender].push(marginTradeId);
-        nrMarginTradesByUser[msg.sender] += 1;
+        marginTradesByUser[_msgSender()].push(marginTradeId);
+        nrMarginTradesByUser[_msgSender()] += 1;
         emit marginTradeEvent(
             block.timestamp,
             marginTradeId,
@@ -261,10 +268,29 @@ contract PerpMock is Ownable, Pausable {
 
             /* solhint-disable-next-line */
             bytes32 priceID = bytes32(
-                0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+                //0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
+                0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
             );
 
             checkPrice = _pyth.getPriceUnsafe(priceID);
         }
+    }
+
+    function _msgSender()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (address)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
     }
 }

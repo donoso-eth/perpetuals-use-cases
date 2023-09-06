@@ -13,7 +13,8 @@ import {
   Web3FunctionResultCallData,
 } from "@gelatonetwork/web3-functions-sdk";
 import { Web3FunctionHardhat } from "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
-import { sleep } from "../../web3-functions/utils";
+import { priceFeedPyth, serverPyth } from "../constants";
+
 
 const { ethers, deployments, w3f } = hre;
 
@@ -23,6 +24,8 @@ describe("PerpMock Liquidations contract tests", function () {
   let perpMock: PerpMock;
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
+  let server = serverPyth;
+  let priceFeed:string = priceFeedPyth
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
       console.error("Test Suite is meant to be run on hardhat only");
@@ -58,9 +61,10 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],
+      "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50"
+      "collateralThreshold":"50",
+      server: serverPyth
       };
 
     let storage = {
@@ -84,9 +88,10 @@ describe("PerpMock Liquidations contract tests", function () {
     
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],
+      "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50"
+      "collateralThreshold":"50",
+      server: serverPyth
       };
 
     let storage = {
@@ -111,9 +116,10 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],
+      "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50"
+      "collateralThreshold":"50",
+      server: serverPyth
       };
 
     let storage = {
@@ -150,9 +156,10 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": ["0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"],
+      "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50"
+      "collateralThreshold":"50",
+      server: serverPyth
       };
 
     let storage = {
