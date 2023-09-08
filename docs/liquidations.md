@@ -4,6 +4,7 @@ This use case showcases how we can set up a scalable liquidation system with the
 
 The Collateral threshold is 50%, so if the price goes against the trade or collateral is removed, and the threshold goes below 50%, the trade will be liquidated
 
+The application is live on Arbitrium Goerlit:  [https://perps-gelato.web.app](https://perps-gelato.web.app) and the Perpetual Mock contract is deployed and verified on 
 
 ### Results:
 
@@ -16,7 +17,7 @@ As we can see in the results, the order shown was liquidated because the collate
 
 Once created an order we can update the collateral.
 
- <img src="../docs/images/liquidations-5.png" width="500">
+ <img src="../docs/images/liquidations-4.png" width="500">
 
 ### Why Gelato Web3 Functions?
 

@@ -5,6 +5,9 @@ At Gelato we love perps because Perps are all about speed and this is precisely 
 
 In this repo, we compile the four core perps processes that we have seen our customers integrating or are about to integrate.
 
+The application is live on Arbitrium Goerlit:  [https://perps-gelato.web.app](https://perps-gelato.web.app) and the Perpetual Mock contract is deployed and verified on [ArbitriumGoerli](https://goerli.arbiscan.io/address/0x0542F269C737bDe9e2d1883FaF0eC2F3D51e5B95)
+
+
 ### What is a perpetual contract?
 
  A perpetual contract is a derivative that derives its value from the underlying asset. The main difference with the classical futures contracts is that it does not have an expiry date, so the user will need to close the position, or in the case that the price goes against your prediction, you can add collateral.

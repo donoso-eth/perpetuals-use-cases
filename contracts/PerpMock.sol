@@ -15,6 +15,8 @@ import {
 } from "@gelatonetwork/relay-context/contracts/vendor/ERC2771Context.sol";
 
 contract PerpMock is ERC2771Context, Pausable, Ownable {
+// #region state
+    
     struct Order {
         address user;
         uint256 timestamp;
@@ -76,6 +78,7 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         );
         _;
     }
+// #endregion state
 
     constructor(
         address _gelatoMsgSender,
@@ -86,8 +89,6 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         _pyth = IPyth(pythContract);
     }
 
-    /* solhint-disable-next-line no-empty-blocks */
-    receive() external payable {}
 
     // #region ============ ===============  Settle Order Implementation ============= ============= //
     function setOrder(uint256 _amount) external {
@@ -267,6 +268,7 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
     }
 
     // #endregion ============ =============== ============= ============= ===============  ===============  //
+    
     function pause() external onlyOwner {
         _pause();
     }
@@ -281,6 +283,10 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         }("");
         return result;
     }
+
+        /* solhint-disable-next-line no-empty-blocks */
+    receive() external payable {}
+
 
     function getConditionalOrder(
         uint256 _order

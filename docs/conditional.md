@@ -1,6 +1,7 @@
 # Gelato ❤️ Perps: Conditional Orders & Order Matching
 
 This use case showcases how we can set conditional orders on-chain, and with the help of Web3 Functions we can match the orders with ooff-chain data and execute them on-chain
+The application is live on Arbitrium Goerlit:  [https://perps-gelato.web.app](https://perps-gelato.web.app) and the Perpetual Mock contract is deployed and verified on 
 
 
 ### Results:
@@ -39,7 +40,7 @@ The three benefits of using Gelato Web3 functions are:
 
 3) If the orders match, prepare the data to be published on-chain
 
- See code [here](../web3-functions/trigger-order/index.ts#L99)
+ See code [here](../web3-functions/trigger-order/index.ts#L128)
 
  <img src="../docs/images/conditional-3.png" width="500">
 
