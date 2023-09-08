@@ -2,7 +2,7 @@
 
 This use-case showcases how we can easily implement Gasless transactions, so the users don't need to have native tokens to execute transdactions, and even implements Temporary Session Keys, that allow users to sign the start of the session and then execute trades without the need of signing anymore as long as the Sesson Key is still valid
 
-The application is live on Arbitrium Goerlit:  [https://perps-gelato.web.app](https://perps-gelato.web.app) and the Perpetual Mock contract is deployed and verified on 
+The application is live on Arbitrium Goerlit:  [https://perps-gelato.web.app](https://perps-gelato.web.app).
 
 ### Results:
 
