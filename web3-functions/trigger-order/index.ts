@@ -68,6 +68,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   let orders: Array<IORDER> = [];
 
+  // Get events from emitted by the contract
   const topics = [
     perpMockContract.interface.getEventTopic(
       "setConditionalOrderEvent(uint256,uint256,int64,bool)"
@@ -94,10 +95,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     });
   }
 
-
+  // add the stored orders not executed from previoius blocks
   orders = orders.concat(ordersToFullfill.orders);
 
 
+  // Matching orders
   console.log('orders: ', orders.length)
   let ordersAbove: Array<IORDER> = orders.filter(
     (fil) => fil.above && price.price >= fil.price
@@ -123,10 +125,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   await storage.set("ordersToFullfill", JSON.stringify(ordersToFullfill));
   console.log(`orders remaining: `, ordersToFullfill.orders.length)
 
-  // web3 funciton storage initialization
+  // web3 tx preparation
   if (ordersReady.length > 0) {
     const updatePriceData = await connection.getPriceFeedsUpdateData(priceIds);
-
     const callData = perpMockContract.interface.encodeFunctionData(
       "updatePriceConditionalOrders",
       [updatePriceData, ordersReady, price.publishTime]

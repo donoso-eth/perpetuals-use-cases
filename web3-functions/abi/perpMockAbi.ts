@@ -307,6 +307,11 @@ export const perpMockAbi = [
         "internalType": "int64",
         "name": "tokens",
         "type": "int64"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -405,6 +410,11 @@ export const perpMockAbi = [
             "internalType": "int64",
             "name": "tokens",
             "type": "int64"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
           }
         ],
         "internalType": "struct PerpMock.Order",
@@ -471,6 +481,11 @@ export const perpMockAbi = [
             "internalType": "int64",
             "name": "tokens",
             "type": "int64"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
           }
         ],
         "internalType": "struct PerpMock.Order",
@@ -537,6 +552,11 @@ export const perpMockAbi = [
             "internalType": "int64",
             "name": "tokens",
             "type": "int64"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
           }
         ],
         "internalType": "struct PerpMock.Order",
@@ -698,6 +718,11 @@ export const perpMockAbi = [
         "internalType": "int64",
         "name": "tokens",
         "type": "int64"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -808,6 +833,11 @@ export const perpMockAbi = [
         "internalType": "int64",
         "name": "tokens",
         "type": "int64"
+      },
+      {
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

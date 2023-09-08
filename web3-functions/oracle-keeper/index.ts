@@ -34,25 +34,26 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const remainingOrders:{orders:Array<{timestamp: number, orderId:number}>} =   JSON.parse(
     (await storage.get("remainingOrders")) ?? `{"orders":[]}`
   );
-
- const perpMockContract = new Contract(perpMock, perpMockAbi, provider);
-
-  // Get Pyth price data
-  const connection = new EvmPriceServiceConnection(
-    `https://xc-${server}.pyth.network`
-  ); // See Price Service endpoints section below for other endpoints
-
+  
+  // Event listening
+  const perpMockContract = new Contract(perpMock, perpMockAbi, provider);
   const topics = [
     perpMockContract.interface.getEventTopic(
       "setOrderEvent(uint256 timestamp, uint256 orderId)"
     ),
   ];
 
-  const currentBlock = await provider.getBlockNumber();
-  let logs = await getLogs(lastProcessedBlock, currentBlock,perpMock,topics,provider );
+ const currentBlock = await provider.getBlockNumber();
+ let logs = await getLogs(lastProcessedBlock, currentBlock,perpMock,topics,provider );
+  
  
-  const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];
+ // Get Pyth price data
+  const connection = new EvmPriceServiceConnection(
+    `https://xc-${server}.pyth.network`
+  ); // See Price Service endpoints section below for other endpoints
 
+
+  const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];
   const priceObject = check[0].toJson().price;
 
 
@@ -95,12 +96,12 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   await storage.set("lastProcessedBlock", logs.toBlock.toString());
   await storage.set("remainingOrders", JSON.stringify({orders: ordersTooEarly}));
 
-  // web3 funciton storage initialization
+  // Preparing data
   if (ordersReady.length>0) {
-  
     const updatePriceData = await connection.getPriceFeedsUpdateData(priceIds);
 
-    const callData = perpMockContract.interface.encodeFunctionData("updatePriceOrders", [updatePriceData,ordersReady,price.publishTime],);
+    const callData = perpMockContract.interface.encodeFunctionData("updatePriceOrders", 
+    [updatePriceData,ordersReady,price.publishTime],);
     return {
       canExec: true,
       callData: [

@@ -118,7 +118,6 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
             updatePriceData,
             _timestamp
         );
-
         for (uint256 i = 0; i < _orders.length; i++) {
             Order storage order = ordersByOrderId[_orders[i]];
             order.priceSettled = checkPrice.price;
@@ -187,13 +186,21 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
 
     // #region ============ ===============  Liquidations Implementation ============= ============= //
 
-    function marginTrade(uint256 _leverage, uint256 _amount, int64 _price) external {
+    function marginTrade(
+        uint256 _leverage,
+        uint256 _amount,
+        int64 _price
+    ) external {
         require(_amount > 0, "Amount Positive");
         require(_leverage > 0, "Leverage Positive");
         require(_price > 0, "Price Positive");
-        require(  marginTradesByOrderId[marginTradeIdByUser[_msgSender()]].active == false, "Already in a trade");
+        require(
+            marginTradesByOrderId[marginTradeIdByUser[_msgSender()]].active ==
+                false,
+            "Already in a trade"
+        );
         marginTradeId += 1;
-        int64  tokens =  ((int64(uint64(_amount))*(10**12))/(_price)) ;
+        int64 tokens = ((int64(uint64(_amount)) * (10 ** 12)) / (_price));
         marginTradesByOrderId[marginTradeId] = Order(
             msg.sender,
             block.timestamp,
@@ -203,8 +210,8 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
             false,
             _leverage,
             0,
-           tokens,
-           true
+            tokens,
+            true
         );
         marginTradeIdByUser[_msgSender()] = marginTradeId;
 
@@ -216,6 +223,26 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
             _price,
             tokens
         );
+    }
+
+    function liquidate(
+        uint256[] memory _tradesLiquidated,
+        uint256 _timestamp,
+        int64 _priceSettled
+    ) external onlyGelatoMsgSender {
+        for (uint256 i = 0; i < _tradesLiquidated.length; i++) {
+            Order storage liquidateTrade = marginTradesByOrderId[
+                _tradesLiquidated[i]
+            ];
+            liquidateTrade.priceSettled = _priceSettled;
+            liquidateTrade.publishTime = _timestamp;
+            liquidateTrade.active = false;
+
+            emit executeLiquidateOrder(
+                liquidateTrade.user,
+                _tradesLiquidated[i]
+            );
+        }
     }
 
     function updateCollateral(
@@ -237,26 +264,6 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
             marginTradesByOrderId[_orderId].amount -= _amount;
         }
         emit updateCollateralEvent(_orderId, _amount, _add);
-    }
-
-    function liquidate(
-        uint256[] memory _tradesLiquidated,
-        uint256 _timestamp,
-        int64 _priceSettled
-    ) external onlyGelatoMsgSender {
-        for (uint256 i = 0; i < _tradesLiquidated.length; i++) {
-            Order storage liquidateTrade = marginTradesByOrderId[
-                _tradesLiquidated[i]
-            ];
-            liquidateTrade.priceSettled = _priceSettled;
-            liquidateTrade.publishTime = _timestamp;
-            liquidateTrade.active = false;
-
-            emit executeLiquidateOrder(
-                liquidateTrade.user,
-                _tradesLiquidated[i]
-            );
-        }
     }
 
     // #endregion ============ =============== ============= ============= ===============  ===============  //

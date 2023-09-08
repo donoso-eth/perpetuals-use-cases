@@ -105,10 +105,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
       tokens: +tokens.toString()/10**4,
     });
   }
-
-
   console.log('New Orders: ', orders.map(order=> order.orderId));
-
   orders = orders.concat(remainingOrders.orders);
   
   // Update Collateral
@@ -167,7 +164,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     JSON.stringify({ orders: ordersRemaining })
   );
 
-  // web3 funciton storage initialization
+  // Preparing tx
   if (ordersToLiquidate.length > 0) {
     console.log('Liquidating Orders:', ordersToLiquidate);
     console.log('Remaining NrOrders:', ordersRemaining.length)
