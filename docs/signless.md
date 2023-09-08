@@ -18,7 +18,7 @@ When clicking the switcher **Signless** the dapp will:
 - Create new session keysif needed
 - Use session keys to sign following transactions 
 
-Once signless is activated, the ransactiosn will be relayed to the SessionKeyContract and forwarded to the target contract, in our case the Perpmock contract
+Once signless is activated, the transactions will be relayed to the SessionKeyContract and forwarded to the target contract, in our case the Perpmock contract
 
 ### Why Gelato Web3 Relayer?
 
