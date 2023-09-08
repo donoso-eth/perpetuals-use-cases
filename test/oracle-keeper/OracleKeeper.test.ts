@@ -71,7 +71,7 @@ describe("PerpMock set Orders contract tests", function () {
       ),
     ];
 
-    const logs: Log[] = await getLogs(
+    const logs= await getLogs(
       lastBlock,
       currentBlock,
       perpMock.address,
@@ -80,10 +80,10 @@ describe("PerpMock set Orders contract tests", function () {
     );
 
     // Parse retrieved events
-    console.log(`Matched ${logs.length} new events`);
+    console.log(`Matched ${logs.logs.length} new events`);
 
     let newestTimeStamp = 0;
-    for (const log of logs) {
+    for (const log of logs.logs) {
       const event = perpMock.interface.parseLog(log);
       const [timestamp, orderId] = event.args;
   
@@ -120,10 +120,6 @@ describe("PerpMock set Orders contract tests", function () {
 
     let storage = {
       };
-  
-     let  lensGelatoW3f = w3f.get("lensChatGPT");
-      let { result } = await lensGelatoW3f.run({ userArgs, storage });
-
 
       await perpMock
         .connect(gelatoMsgSenderSigner)

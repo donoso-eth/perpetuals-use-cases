@@ -1,4 +1,4 @@
-export const perpMockAbi =   [
+export const perpMockAbi = [
   {
     "inputs": [
       {
@@ -70,6 +70,44 @@ export const perpMockAbi =   [
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "executeConditionalOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "executeLiquidateOrder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
@@ -91,6 +129,18 @@ export const perpMockAbi =   [
         "internalType": "uint256",
         "name": "leverage",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int64",
+        "name": "price",
+        "type": "int64"
+      },
+      {
+        "indexed": false,
+        "internalType": "int64",
+        "name": "tokens",
+        "type": "int64"
       }
     ],
     "name": "marginTradeEvent",
@@ -151,6 +201,25 @@ export const perpMockAbi =   [
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "orderId",
+        "type": "uint256"
+      }
+    ],
+    "name": "settleOrderEvent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "orderId",
         "type": "uint256"
@@ -195,6 +264,11 @@ export const perpMockAbi =   [
     "name": "conditionalOrdersByOrderId",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
@@ -223,6 +297,16 @@ export const perpMockAbi =   [
         "internalType": "uint256",
         "name": "leverage",
         "type": "uint256"
+      },
+      {
+        "internalType": "int64",
+        "name": "priceSettled",
+        "type": "int64"
+      },
+      {
+        "internalType": "int64",
+        "name": "tokens",
+        "type": "int64"
       }
     ],
     "stateMutability": "view",
@@ -278,6 +362,11 @@ export const perpMockAbi =   [
       {
         "components": [
           {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "timestamp",
             "type": "uint256"
@@ -306,6 +395,16 @@ export const perpMockAbi =   [
             "internalType": "uint256",
             "name": "leverage",
             "type": "uint256"
+          },
+          {
+            "internalType": "int64",
+            "name": "priceSettled",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "tokens",
+            "type": "int64"
           }
         ],
         "internalType": "struct PerpMock.Order",
@@ -324,10 +423,15 @@ export const perpMockAbi =   [
         "type": "uint256"
       }
     ],
-    "name": "getMargonTrade",
+    "name": "getMarginTrade",
     "outputs": [
       {
         "components": [
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
           {
             "internalType": "uint256",
             "name": "timestamp",
@@ -357,6 +461,16 @@ export const perpMockAbi =   [
             "internalType": "uint256",
             "name": "leverage",
             "type": "uint256"
+          },
+          {
+            "internalType": "int64",
+            "name": "priceSettled",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "tokens",
+            "type": "int64"
           }
         ],
         "internalType": "struct PerpMock.Order",
@@ -380,6 +494,11 @@ export const perpMockAbi =   [
       {
         "components": [
           {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "timestamp",
             "type": "uint256"
@@ -408,6 +527,16 @@ export const perpMockAbi =   [
             "internalType": "uint256",
             "name": "leverage",
             "type": "uint256"
+          },
+          {
+            "internalType": "int64",
+            "name": "priceSettled",
+            "type": "int64"
+          },
+          {
+            "internalType": "int64",
+            "name": "tokens",
+            "type": "int64"
           }
         ],
         "internalType": "struct PerpMock.Order",
@@ -448,6 +577,11 @@ export const perpMockAbi =   [
         "internalType": "uint256",
         "name": "_timestamp",
         "type": "uint256"
+      },
+      {
+        "internalType": "int64",
+        "name": "_priceSettled",
+        "type": "int64"
       }
     ],
     "name": "liquidate",
@@ -466,6 +600,11 @@ export const perpMockAbi =   [
         "internalType": "uint256",
         "name": "_amount",
         "type": "uint256"
+      },
+      {
+        "internalType": "int64",
+        "name": "_price",
+        "type": "int64"
       }
     ],
     "name": "marginTrade",
@@ -489,6 +628,25 @@ export const perpMockAbi =   [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "marginTradeIdByUser",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -496,6 +654,11 @@ export const perpMockAbi =   [
     ],
     "name": "marginTradesByOrderId",
     "outputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "timestamp",
@@ -525,30 +688,16 @@ export const perpMockAbi =   [
         "internalType": "uint256",
         "name": "leverage",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "marginTradesByUser",
-    "outputs": [
+        "internalType": "int64",
+        "name": "priceSettled",
+        "type": "int64"
+      },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "internalType": "int64",
+        "name": "tokens",
+        "type": "int64"
       }
     ],
     "stateMutability": "view",
@@ -563,25 +712,6 @@ export const perpMockAbi =   [
       }
     ],
     "name": "nrConditionalOrdersByUser",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "nrMarginTradesByUser",
     "outputs": [
       {
         "internalType": "uint256",
@@ -635,6 +765,11 @@ export const perpMockAbi =   [
     "name": "ordersByOrderId",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "timestamp",
         "type": "uint256"
@@ -663,6 +798,16 @@ export const perpMockAbi =   [
         "internalType": "uint256",
         "name": "leverage",
         "type": "uint256"
+      },
+      {
+        "internalType": "int64",
+        "name": "priceSettled",
+        "type": "int64"
+      },
+      {
+        "internalType": "int64",
+        "name": "tokens",
+        "type": "int64"
       }
     ],
     "stateMutability": "view",

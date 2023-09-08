@@ -26,6 +26,7 @@ describe("PerpMock Liquidations contract tests", function () {
   let genesisBlock: number;
   let server = serverPyth;
   let priceFeed:string = priceFeedPyth
+  let price:number;
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
       console.error("Test Suite is meant to be run on hardhat only");
@@ -51,13 +52,23 @@ describe("PerpMock Liquidations contract tests", function () {
     await setBalance(gelatoMsgSender, utils.parseEther("10000000000000"));
     genesisBlock = await hre.ethers.provider.getBlockNumber();
 
-  
+    const connection = new EvmPriceServiceConnection(
+      `https://xc-${server}.pyth.network`
+    );
+
+    const priceIds = [
+      priceFeed, // ETH/USD price id inmainet
+    ];
+
+    const check = (await connection.getLatestPriceFeeds(priceIds)) as any[];
+    price= +(check[0].price.price)
+
 
   });
 
 
   it("w3f create order", async () => { 
-    await perpMock.marginTrade(10,20000)
+    await perpMock.marginTrade(10,20000,price)
 
     let userArgs = {
       "perpMock": perpMock.address,
@@ -82,9 +93,9 @@ describe("PerpMock Liquidations contract tests", function () {
      
   })
   it("w3f create order and update it", async () => { 
-    await perpMock.marginTrade(10,20000,)
+    await perpMock.marginTrade(10,20000,price)
     await perpMock.updateCollateral(1,20000,true)
-    await perpMock.marginTrade(100,10000,)
+   
     
     let userArgs = {
       "perpMock": perpMock.address,
@@ -103,15 +114,12 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let result = w3frun.result;
     expect (result.canExec).false
-    expect (JSON.parse(w3frun.storage.storage.remainingOrders!).orders.length).eq(2)
-    expect (JSON.parse(w3frun.storage.storage.remainingOrders!).orders[0].amount).eq(40000)
-  
-  
-     
+    expect (JSON.parse(w3frun.storage.storage.remainingOrders!).orders.length).eq(1)
+    expect (JSON.parse(w3frun.storage.storage.remainingOrders!).orders[0].amount).eq(40000) 
   })
 
   it("w3f create order and w3f run, no execution as current collateral >= 50% Threshold", async () => { 
-    await perpMock.marginTrade(10,20000,)
+    await perpMock.marginTrade(10,20000,price)
     await perpMock.updateCollateral(1,20000,true)
 
     let userArgs = {
@@ -151,7 +159,7 @@ describe("PerpMock Liquidations contract tests", function () {
   })
 
   it("w3f create order and w3f run, execution as current collateral 49.9% < Threshold", async () => { 
-    await perpMock.marginTrade(10,20000,)
+    await perpMock.marginTrade(10,20000,price)
     await perpMock.updateCollateral(1,20000,true)
 
     let userArgs = {
@@ -173,7 +181,7 @@ describe("PerpMock Liquidations contract tests", function () {
     /// First run
 
 
-    await perpMock.updateCollateral(1,20001,false)
+    await perpMock.updateCollateral(1,20100,false)
 
 
     /// Second run (web3 function when hardhat and second run price deviation 5% )
@@ -195,14 +203,11 @@ describe("PerpMock Liquidations contract tests", function () {
         to:  data.to 
       })
 
-    const trade = await perpMock.getMargonTrade(1)
-    expect(trade.amount).to.eq(0)
+    const trade = await perpMock.getMarginTrade(1)
+    expect(trade.active).to.false
 
     }
      
   })
-
-
-
 
 });

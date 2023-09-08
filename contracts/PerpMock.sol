@@ -16,15 +16,17 @@ import {
 
 contract PerpMock is ERC2771Context, Pausable, Ownable {
     struct Order {
+        address user;
         uint256 timestamp;
         uint256 amount;
         int64 price;
         uint256 publishTime;
         bool above;
         uint256 leverage;
+        int64 priceSettled;
+        int64 tokens;
+        bool active;
     }
-
- 
 
     IPyth private _pyth;
     mapping(uint256 => int64) priceByTimestamp;
@@ -35,6 +37,7 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
     mapping(address => uint256[]) public ordersByUser;
     mapping(address => uint256) public nrOrdersByUser;
     event setOrderEvent(uint256 timestamp, uint256 orderId);
+    event settleOrderEvent(address user, uint256 orderId);
 
     // Conditional Orders
     uint256 public conditionalOrderId;
@@ -47,19 +50,22 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         int64 price,
         bool above
     );
+    event executeConditionalOrder(address user, uint256 orderId);
 
     // Margin Trading
     uint256 public marginTradeId;
     mapping(uint256 => Order) public marginTradesByOrderId;
-    mapping(address => uint256[]) public marginTradesByUser;
-    mapping(address => uint256) public nrMarginTradesByUser;
+    mapping(address => uint256) public marginTradeIdByUser;
     event marginTradeEvent(
         uint256 timestamp,
         uint256 orderId,
         uint256 amount,
-        uint256 leverage
+        uint256 leverage,
+        int64 price,
+        int64 tokens
     );
     event updateCollateralEvent(uint256 orderId, uint256 amount, bool add);
+    event executeLiquidateOrder(address user, uint256 orderId);
 
     address public immutable gelatoMsgSender;
 
@@ -71,10 +77,13 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         _;
     }
 
-    constructor(address _gelatoMsgSender, address pythContract, address _trustedForwarder)ERC2771Context(_trustedForwarder) {
+    constructor(
+        address _gelatoMsgSender,
+        address pythContract,
+        address _trustedForwarder
+    ) ERC2771Context(_trustedForwarder) {
         gelatoMsgSender = _gelatoMsgSender;
         _pyth = IPyth(pythContract);
-      
     }
 
     /* solhint-disable-next-line no-empty-blocks */
@@ -84,12 +93,16 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
     function setOrder(uint256 _amount) external {
         orderId += 1;
         ordersByOrderId[orderId] = Order(
+            msg.sender,
             block.timestamp,
             _amount,
             0,
             0,
             true,
-            0
+            0,
+            0,
+            0,
+            true
         );
         ordersByUser[_msgSender()].push(orderId);
         nrOrdersByUser[_msgSender()] += 1;
@@ -108,13 +121,10 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
 
         for (uint256 i = 0; i < _orders.length; i++) {
             Order storage order = ordersByOrderId[_orders[i]];
-            require(
-                order.timestamp + 12 < checkPrice.publishTime,
-                "NOT 12 sec elapsed"
-            );
-
-            order.price = checkPrice.price;
+            order.priceSettled = checkPrice.price;
             order.publishTime = checkPrice.publishTime;
+            order.active = false;
+            emit settleOrderEvent(order.user, _orders[i]);
         }
     }
 
@@ -128,12 +138,16 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
     ) external {
         conditionalOrderId += 1;
         conditionalOrdersByOrderId[conditionalOrderId] = Order(
+            msg.sender,
             block.timestamp,
             _amount,
-            0,
+            _price,
             0,
             _above,
-            0
+            0,
+            0,
+            0,
+            true
         );
         conditionalOrdersByUser[_msgSender()].push(conditionalOrderId);
         nrConditionalOrdersByUser[_msgSender()] += 1;
@@ -159,8 +173,13 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
             Order storage conditionalOrder = conditionalOrdersByOrderId[
                 _conditionalOrders[i]
             ];
-            conditionalOrder.price = checkPrice.price;
+            conditionalOrder.priceSettled = checkPrice.price;
             conditionalOrder.publishTime = checkPrice.publishTime;
+            conditionalOrder.active = false;
+            emit executeConditionalOrder(
+                conditionalOrder.user,
+                _conditionalOrders[i]
+            );
         }
     }
 
@@ -168,24 +187,34 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
 
     // #region ============ ===============  Liquidations Implementation ============= ============= //
 
-    function marginTrade(uint256 _leverage, uint256 _amount) external {
+    function marginTrade(uint256 _leverage, uint256 _amount, int64 _price) external {
         require(_amount > 0, "Amount Positive");
+        require(_leverage > 0, "Leverage Positive");
+        require(_price > 0, "Price Positive");
+        require(  marginTradesByOrderId[marginTradeIdByUser[_msgSender()]].active == false, "Already in a trade");
         marginTradeId += 1;
+        int64  tokens =  ((int64(uint64(_amount))*(10**12))/(_price)) ;
         marginTradesByOrderId[marginTradeId] = Order(
+            msg.sender,
             block.timestamp,
             _amount,
-            0,
+            _price,
             0,
             false,
-            _leverage
+            _leverage,
+            0,
+           tokens,
+           true
         );
-        marginTradesByUser[_msgSender()].push(marginTradeId);
-        nrMarginTradesByUser[_msgSender()] += 1;
+        marginTradeIdByUser[_msgSender()] = marginTradeId;
+
         emit marginTradeEvent(
             block.timestamp,
             marginTradeId,
             _amount,
-            _leverage
+            _leverage,
+            _price,
+            tokens
         );
     }
 
@@ -194,7 +223,10 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         uint256 _amount,
         bool _add
     ) external {
-        require(marginTradesByOrderId[_orderId].amount != 0, "No Margin Trade");
+        require(
+            marginTradesByOrderId[_orderId].leverage != 0,
+            "No Margin Trade"
+        );
         if (_add) {
             marginTradesByOrderId[_orderId].amount += _amount;
         } else {
@@ -209,16 +241,21 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
 
     function liquidate(
         uint256[] memory _tradesLiquidated,
-        uint256 _timestamp
+        uint256 _timestamp,
+        int64 _priceSettled
     ) external onlyGelatoMsgSender {
         for (uint256 i = 0; i < _tradesLiquidated.length; i++) {
             Order storage liquidateTrade = marginTradesByOrderId[
                 _tradesLiquidated[i]
             ];
-            liquidateTrade.price = 0;
+            liquidateTrade.priceSettled = _priceSettled;
             liquidateTrade.publishTime = _timestamp;
-            liquidateTrade.leverage = 0;
-            liquidateTrade.amount = 0;
+            liquidateTrade.active = false;
+
+            emit executeLiquidateOrder(
+                liquidateTrade.user,
+                _tradesLiquidated[i]
+            );
         }
     }
 
@@ -248,7 +285,7 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
         return ordersByOrderId[_order];
     }
 
-    function getMargonTrade(uint256 _order) public view returns (Order memory) {
+    function getMarginTrade(uint256 _order) public view returns (Order memory) {
         return marginTradesByOrderId[_order];
     }
 

@@ -83,7 +83,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     provider
   );
 
-  for (const log of logs) {
+  for (const log of logs.logs) {
     const event = perpMockContract.interface.parseLog(log);
     const [timestamp, orderId, price, above] = event.args;
     orders.push({
@@ -96,10 +96,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
 
   orders = orders.concat(ordersToFullfill.orders);
+
+
   console.log('orders: ', orders.length)
   let ordersAbove: Array<IORDER> = orders.filter(
     (fil) => fil.above && price.price >= fil.price
   );
+
   let ordersBelow: Array<IORDER> = orders.filter(
     (fil) => !fil.above && price.price <= fil.price
   );
@@ -116,7 +119,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   );
 
   // update storage moving forward
-  await storage.set("lastProcessedBlock", currentBlock.toString());
+  await storage.set("lastProcessedBlock", logs.toBlock.toString());
   await storage.set("ordersToFullfill", JSON.stringify(ordersToFullfill));
   console.log(`orders remaining: `, ordersToFullfill.orders.length)
 

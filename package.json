@@ -15,8 +15,12 @@
     "lint:ts": "eslint -c .eslintrc.json --ext \"**/*.ts\" \"**/*.test.ts\"",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "postinstall": "yarn husky install",
-    "w3f:deploy": "npx w3f deploy web3-functions/oracle-keeper/index.ts",
-    "w3f:test": "npx w3f test web3-functions/oracle-keeper/index.ts --logs"
+    "w3f:deploy:oracle": "npx w3f deploy web3-functions/oracle-keeper/index.ts",
+    "w3f:deploy:liquidations": "npx w3f deploy web3-functions/liquidations/index.ts",
+    "w3f:deploy:order": "npx w3f deploy web3-functions/trigger-order/index.ts",
+    "w3f:test:order": "npx w3f test web3-functions/oracle-keeper/index.ts --logs --chain-id=421613",
+    "w3f:test:conditional": "npx w3f test web3-functions/trigger-order/index.ts --logs --chain-id=421613",
+    "w3f:test:liquidations": "npx w3f test web3-functions/liquidations/index.ts --logs --chain-id=421613"
   },
   "license": "ISC",
   "devDependencies": {

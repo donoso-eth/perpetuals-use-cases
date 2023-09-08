@@ -71,7 +71,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   let orders:Array<{timestamp: number, orderId:number}> = [];
 
-  for (const log of logs){
+  for (const log of logs.logs){
     const event = perpMockContract.interface.parseLog(log);
     const [timestamp, orderId] = event.args;
     orders.push({timestamp:+timestamp.toString(), orderId:+orderId.toString()})
@@ -92,7 +92,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   
 
   // update storage moving forward
-  await storage.set("lastProcessedBlock", currentBlock.toString());
+  await storage.set("lastProcessedBlock", logs.toBlock.toString());
   await storage.set("remainingOrders", JSON.stringify({orders: ordersTooEarly}));
 
   // web3 funciton storage initialization

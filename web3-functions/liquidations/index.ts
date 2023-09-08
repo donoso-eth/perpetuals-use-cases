@@ -3,7 +3,7 @@ import {
   Web3Function,
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
-import { BigNumber, Contract, utils } from "ethers";
+import { Contract} from "ethers";
 
 import { EvmPriceServiceConnection, PriceFeed } from "@pythnetwork/pyth-evm-js";
 import { getLogs } from "../../test/utils/getLogs";
@@ -24,7 +24,7 @@ interface IORDER {
 }
 
 Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, storage, secrets, multiChainProvider } = context;
+  const { userArgs, storage,  multiChainProvider } = context;
 
   const provider = multiChainProvider.default();
   const network = await provider.getNetwork();
@@ -44,6 +44,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const lastProcessedBlock = +(
     (await storage.get("lastProcessedBlock")) ?? genesisBlock
   );
+
 
   const remainingOrders: { orders: Array<IORDER> } = JSON.parse(
     (await storage.get("remainingOrders")) ?? `{"orders":[]}`
@@ -89,18 +90,22 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     marginTradeTopic,
     provider
   );
-  for (const log of logs) {
+
+
+  for (const log of logs.logs) {
     const event = perpMockContract.interface.parseLog(log);
-    const [timestamp, orderId, amount, leverage] = event.args;
+    const [timestamp, orderId, amount, leverage, price, tokens] = event.args;
+
     orders.push({
       timestamp: +timestamp.toString(),
       orderId: +orderId.toString(),
-      price: price.price,
+      price: +price.toString(),
       amount: +amount.toString(),
       leverage: +leverage.toString(),
-      tokens: amount / (price.price / 10 ** 8),
+      tokens: +tokens.toString()/10**4,
     });
   }
+
 
   console.log('New Orders: ', orders.map(order=> order.orderId));
 
@@ -114,7 +119,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     updateCollateralTopic,
     provider
   );
-  for (const log of logs) {
+
+  for (const log of logs.logs) {
+
     const event = perpMockContract.interface.parseLog(log);
     const [orderId, amount, add] = event.args;
     let availableOrder = orders.filter(
@@ -135,20 +142,16 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
     if (remainingOrders.orders.length >= 1 && chainId == 31337){
       deviation = order.price * 0.05;
-
     }
    
-
-    if (deviation > 0) {
       let collateralRequired = order.tokens * (deviation/10**8) * order.leverage;
-   
       const actualCollateralThreshold =
-        ((order.amount - collateralRequired) / order.amount) * 100;
-      console.log('Actual Threshold: ', actualCollateralThreshold);
+        ((order.amount - collateralRequired) / (order.tokens* (order.price/10**8))) * 100;
+      console.log('Actual Threshold: ', actualCollateralThreshold.toFixed(2));
       if (actualCollateralThreshold < collateralThreshold) {
         ordersToLiquidate.push(order.orderId);
       }
-    }
+    
   }
 
 
@@ -158,7 +161,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   );
 
   // update storage moving forward
-  await storage.set("lastProcessedBlock", currentBlock.toString());
+  await storage.set("lastProcessedBlock", logs.toBlock.toString());
   await storage.set(
     "remainingOrders",
     JSON.stringify({ orders: ordersRemaining })
@@ -170,7 +173,7 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     console.log('Remaining NrOrders:', ordersRemaining.length)
      const callData = perpMockContract.interface.encodeFunctionData(
       "liquidate",
-      [ ordersToLiquidate, price.publishTime]
+      [ ordersToLiquidate, price.publishTime, price.price]
     );
     return {
       canExec: true,

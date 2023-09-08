@@ -101,6 +101,7 @@ describe("PerpMock Conditional contract tests", function () {
         to:  data.to 
       })
     let order1 = await perpMock.getConditionalOrder(1);
+ 
      expect (order1.publishTime).not.equal(0)
      let order2 = await perpMock.getConditionalOrder(2);
      expect (order2.publishTime).equal(0)
