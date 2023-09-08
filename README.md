@@ -51,7 +51,7 @@ One core process of any perpetual protocol is the liquidation process. Tradition
 
 In this use case, we showcase how we can create an auto-scalable liquidation system with the help of Web3 Functions.
 
-Please see more details in [Conditional Orders](/docs/liquidations.md)
+Please see more details in [Liquidations](/docs/liquidations.md)
 
 <img src="./docs/images/liquidations.png" width="500">
 
