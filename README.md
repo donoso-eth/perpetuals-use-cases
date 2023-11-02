@@ -5,7 +5,7 @@ At Gelato we love perps because Perps are all about speed and this is precisely 
 
 In this repo, we compile the four core perps processes that we have seen our customers integrating or are about to integrate.
 
-The application is live on Arbitrium Goerlit:  [https://perps-gelato.web.app](https://perps-gelato.web.app) and the Perpetual Mock contract is deployed and verified on [ArbitriumGoerli](https://goerli.arbiscan.io/address/0x0542F269C737bDe9e2d1883FaF0eC2F3D51e5B95)
+ The Perpetual Mock contract is deployed and verified on [ArbitriumGoerli](https://goerli.arbiscan.io/address/0x0542F269C737bDe9e2d1883FaF0eC2F3D51e5B95)
 
 [![Video Walkthrough](https://img.youtube.com/vi/gZMCEMb4b4c/0.jpg)](https://youtu.be/gZMCEMb4b4c)
 
