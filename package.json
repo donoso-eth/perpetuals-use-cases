@@ -1,7 +1,7 @@
 {
-  "name": "lens-ai-poc",
+  "name": "perps-on-op-celestia",
   "version": "0.0.1",
-  "description": "Smart Oracle that pushes prices online every hour or when the price difference with the last price is greater or equal than 2%",
+  "description": "Perpetuals on Op-Celestia",
   "scripts": {
     "build": "yarn install && yarn compile && npx tsc",
     "clean": "yarn hardhat clean && rm -rf node_modules && rm -rf dist",
@@ -25,8 +25,8 @@
   "license": "ISC",
   "devDependencies": {
     "@ethersproject/providers": "5.7.2",
-    "@gelatonetwork/automate-sdk": "^2.7.0-beta",
-    "@gelatonetwork/web3-functions-sdk": "^2.0.3",
+    "@gelatonetwork/automate-sdk": "^3.0.2",
+    "@gelatonetwork/web3-functions-sdk": "2.3.0",
     "@nomicfoundation/hardhat-chai-matchers": "1.0.6",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
     "@nomiclabs/hardhat-ethers": "2.2.3",
