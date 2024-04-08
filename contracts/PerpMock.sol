@@ -10,11 +10,9 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import {Context} from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import {
-    ERC2771Context
-} from "@gelatonetwork/relay-context/contracts/vendor/ERC2771Context.sol";
 
-contract PerpMock is ERC2771Context, Pausable, Ownable {
+
+contract PerpMock is  Pausable, Ownable {
 // #region state
     
     struct Order {
@@ -82,9 +80,8 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
 
     constructor(
         address _gelatoMsgSender,
-        address pythContract,
-        address _trustedForwarder
-    ) ERC2771Context(_trustedForwarder) {
+        address pythContract
+    )  {
         gelatoMsgSender = _gelatoMsgSender;
         _pyth = IPyth(pythContract);
     }
@@ -324,23 +321,5 @@ contract PerpMock is ERC2771Context, Pausable, Ownable {
 
             checkPrice = _pyth.getPriceUnsafe(priceID);
         }
-    }
-
-    function _msgSender()
-        internal
-        view
-        override(Context, ERC2771Context)
-        returns (address)
-    {
-        return ERC2771Context._msgSender();
-    }
-
-    function _msgData()
-        internal
-        view
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
-        return ERC2771Context._msgData();
     }
 }
