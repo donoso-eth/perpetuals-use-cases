@@ -6,7 +6,6 @@
   "userArgs": {
     "perpMock": "string",
     "priceIds": "string[]",
-    "genesisBlock":"string",
-    "server":"string"
+    "genesisBlock":"string"
   }
 }

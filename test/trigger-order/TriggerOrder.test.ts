@@ -25,7 +25,7 @@ describe("PerpMock Conditional contract tests", function () {
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
   let server = serverPyth;
-  let priceFeed:string = priceFeedPyth
+  let priceFeed:string = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", priceFeedPyth
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
       console.error("Test Suite is meant to be run on hardhat only");
@@ -56,10 +56,11 @@ describe("PerpMock Conditional contract tests", function () {
   });
 
   it("w3f executes", async () => { 
+    // Get Pyth price data
     const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
-
+      "https://hermes.pyth.network",
+  
+   ); // See Price Service endpoints section below for other endpoints
     const priceIds = [
       priceFeed // ETH/USD price id in testnet
     ];
@@ -87,7 +88,7 @@ describe("PerpMock Conditional contract tests", function () {
       };
   
      let oracleKeeperW3f:Web3FunctionHardhat = w3f.get("trigger-order");
-     let  w3frun  = await oracleKeeperW3f.run({ userArgs, storage });
+     let  w3frun  = await oracleKeeperW3f.run("onRun",{ userArgs, storage });
   
 
     let result = w3frun.result;
@@ -117,8 +118,9 @@ describe("PerpMock Conditional contract tests", function () {
   it("PerpMock.updatePrice: onlyGelatoMsgSender", async () => {
     // Arbitrary bytes array
     const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
+      "https://hermes.pyth.network",
+  
+   );
     const priceIds = [
       priceFeed // ETH/USD price id in testnet
     ];
@@ -129,27 +131,14 @@ describe("PerpMock Conditional contract tests", function () {
     );
   });
 
-  it("PerpMock.pause: Pauses the contract", async () => {
-    await perpMock.pause();
-
-    expect(await perpMock.paused()).to.equal(true);
-  });
-
-  it("PerpMock.unpause: Unpauses the contract", async () => {
-    await perpMock.pause();
-
-    expect(await perpMock.paused()).to.equal(true);
-
-    await perpMock.unpause();
-
-    expect(await perpMock.paused()).to.equal(false);
-  });
+ 
 
   it("PerpMock.updatePrice: should update price correctly", async () => {
+    // Get Pyth price data
     const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
-
+      "https://hermes.pyth.network",
+  
+   ); // See Price Service endpoints section below for other endpoints
     const priceIds = [
       priceFeed // ETH/USD price id in testnet
     ];

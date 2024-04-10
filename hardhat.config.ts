@@ -24,7 +24,7 @@ const config: HardhatUserConfig = {
   w3f: {
     rootDir: "./web3-functions",
     debug: false,
-    networks: ["arbitriumGoerli","hardhat", "mumbai"], //(multiChainProvider) injects provider for these networks
+    networks: ["hardhat", "raspberry"], //(multiChainProvider) injects provider for these networks
   },
   // hardhat-deploy
   namedAccounts: {
@@ -33,29 +33,21 @@ const config: HardhatUserConfig = {
     },
     gelatoMsgSender: {
       hardhat: "0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
-      mumbai: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
-      polygon: "0xcc53666e25BF52C7c5Bc1e8F6E1F6bf58E871659",
-      arbitrium:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
       raspberry:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225"
     },
     pyth: {
-      hardhat: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
-      mumbai: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
-      polygon: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
-      arbitrium:"0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
-      raspberry:"0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13"
+      hardhat: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+      raspberry:"0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
     },
 
 
   },
-  defaultNetwork: "arbitriumGoerli",
+  defaultNetwork: "hardhat",
 
   networks: {
     hardhat: {
       forking: {
-        //url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
-        url:`https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_ID}`,
-       // blockNumber: 35241432,
+        url:`https://rpc.opcelestia-raspberry.gelato.digital`,
       },
     },
 

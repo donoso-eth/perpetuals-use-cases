@@ -2,6 +2,7 @@
 import {
   Web3Function,
   Web3FunctionContext,
+  Web3FunctionEventContext
 } from "@gelatonetwork/web3-functions-sdk";
 import { BigNumber, Contract, utils } from "ethers";
 
@@ -15,42 +16,21 @@ interface IPRICE {
   publishTime: number;
 }
 
-Web3Function.onRun(async (context: Web3FunctionContext) => {
-  const { userArgs, storage, secrets, multiChainProvider } = context;
+Web3Function.onRun(async (context: Web3FunctionEventContext) => {
+  const { userArgs, storage, multiChainProvider, log } = context;
 
   const provider = multiChainProvider.default();
 
   // userArgs
   const perpMock= (userArgs.perpMock as string) ?? "";
   const priceIds = (userArgs.priceIds ?? "") as string[];
-  const genesisBlock = +(userArgs.genesisBlock ?? ("0" as string));  
-  const delay= +((userArgs.delay as string) ?? "12");
-  const server= userArgs.server as string ?? "mainnet";
-
-  // User Storage
-  const lastProcessedBlock = +((await storage.get("lastProcessedBlock")) ?? genesisBlock);
-
-
-  const remainingOrders:{orders:Array<{timestamp: number, orderId:number}>} =   JSON.parse(
-    (await storage.get("remainingOrders")) ?? `{"orders":[]}`
-  );
-  
-  // Event listening
-  const perpMockContract = new Contract(perpMock, perpMockAbi, provider);
-  const topics = [
-    perpMockContract.interface.getEventTopic(
-      "setOrderEvent(uint256 timestamp, uint256 orderId)"
-    ),
-  ];
-
- const currentBlock = await provider.getBlockNumber();
- let logs = await getLogs(lastProcessedBlock, currentBlock,perpMock,topics,provider );
-  
  
+
+
  // Get Pyth price data
-  const connection = new EvmPriceServiceConnection(
-    `https://xc-${server}.pyth.network`
-  ); // See Price Service endpoints section below for other endpoints
+ const connection = new EvmPriceServiceConnection(
+  "https://hermes.pyth.network",
+); // See Price Service endpoints section below for other endpoints
 
 
   const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];
@@ -70,38 +50,19 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     publishTime: +priceObject.publish_time.toString()
   } 
 
-  let orders:Array<{timestamp: number, orderId:number}> = [];
 
-  for (const log of logs.logs){
+
+  const perpMockContract = new Contract(perpMock, perpMockAbi, provider);
     const event = perpMockContract.interface.parseLog(log);
     const [timestamp, orderId] = event.args;
-    orders.push({timestamp:+timestamp.toString(), orderId:+orderId.toString()})
-  }
-
- orders  = orders.concat(remainingOrders.orders)
- let ordersReady:number[] = [];
- let ordersTooEarly:Array<{timestamp: number, orderId:number}> = [];
-
-  for (const order of orders) {
-    console.log(order.timestamp + delay,price.publishTime, order.orderId)
-    if (order.timestamp + delay <= price.publishTime){
-      ordersReady.push(order.orderId);  
-  } else {
-    ordersTooEarly.push({timestamp:order.timestamp, orderId:order.orderId})
-  }
-  }
-  
-
-  // update storage moving forward
-  await storage.set("lastProcessedBlock", logs.toBlock.toString());
-  await storage.set("remainingOrders", JSON.stringify({orders: ordersTooEarly}));
+   
+ 
 
   // Preparing data
-  if (ordersReady.length>0) {
     const updatePriceData = await connection.getPriceFeedsUpdateData(priceIds);
 
     const callData = perpMockContract.interface.encodeFunctionData("updatePriceOrders", 
-    [updatePriceData,ordersReady,price.publishTime],);
+    [updatePriceData,[orderId],price.publishTime],);
     return {
       canExec: true,
       callData: [
@@ -111,15 +72,4 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         },
       ],
     };
-  } else {
-    if (ordersTooEarly.length > 1){
-      console.log(` orders too early: ${ordersTooEarly.length}`)
-    }
-    return {
-      canExec:false,
-      message: "Not orders to settle"
-    }
-  }
-
-
 });

@@ -1,6 +1,4 @@
 {
-  "perpMock": "0x4C1b1Ae4b671d7a778dCDdCdC62A14940ec438BA",
-  "priceIds":  [ "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6" ],
-  "genesisBlock":"0",
-  "delay":"200"
+  "perpMock": "0x08EAc96a9Bf825539E0C1Bfa876c942Df0E09671",
+  "priceIds":  [ "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" ]
 }

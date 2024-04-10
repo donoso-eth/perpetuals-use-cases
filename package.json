@@ -18,9 +18,9 @@
     "w3f:deploy:oracle": "npx w3f deploy web3-functions/oracle-keeper/index.ts",
     "w3f:deploy:liquidations": "npx w3f deploy web3-functions/liquidations/index.ts",
     "w3f:deploy:order": "npx w3f deploy web3-functions/trigger-order/index.ts",
-    "w3f:test:order": "npx w3f test web3-functions/oracle-keeper/index.ts --logs --chain-id=421613",
-    "w3f:test:conditional": "npx w3f test web3-functions/trigger-order/index.ts --logs --chain-id=421613",
-    "w3f:test:liquidations": "npx w3f test web3-functions/liquidations/index.ts --logs --chain-id=421613"
+    "w3f:test:order": "npx w3f test web3-functions/oracle-keeper/index.ts --logs --chain-id=123420111",
+    "w3f:test:conditional": "npx w3f test web3-functions/trigger-order/index.ts --logs --chain-id=123420111",
+    "w3f:test:liquidations": "npx w3f test web3-functions/liquidations/index.ts --logs --chain-id=123420111"
   },
   "license": "ISC",
   "devDependencies": {

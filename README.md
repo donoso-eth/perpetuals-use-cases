@@ -5,9 +5,8 @@ At Gelato we love perps because Perps are all about speed and this is precisely 
 
 In this repo, we compile the four core perps processes that we have seen our customers integrating or are about to integrate.
 
- The Perpetual Mock contract is deployed and verified on [ArbitriumGoerli](https://goerli.arbiscan.io/address/0x0542F269C737bDe9e2d1883FaF0eC2F3D51e5B95)
+ The Perpetual Mock contract is deployed and verified on [Op Celestia](https://opcelestia-raspberry.gelatoscout.com/address/0x08EAc96a9Bf825539E0C1Bfa876c942Df0E09671#code)
 
-[![Video Walkthrough](https://img.youtube.com/vi/gZMCEMb4b4c/0.jpg)](https://youtu.be/gZMCEMb4b4c)
 
 
 ### What is a perpetual contract?
@@ -20,7 +19,7 @@ In this repo, we compile the four core perps processes that we have seen our cus
 - Low Latency Oracle: Order Settlement
 - Order Matching: Conditional Orders
 - Liquidations
-- Signless Trading
+- Gassless Trading
 
 
 
@@ -63,11 +62,4 @@ Please see more details in [Liquidations](/docs/liquidations.md)
 
 ## Gasless & Signless
 
-This use-case showcases how we can easily implement Gasless transactions, so the users don't need to have native tokens to execute transdactions, and even implements Temporary Session Keys, that allow users to sign the start of the session and then execute trades without the need of signing anymore as long as the Sesson Key is still valid
-
-In this use case, we showcase how we can create aa simple soluton to enable Gasless & Signless trading with Gelato Relay.
-
-Please see more details in [Gasless & signless](/docs/signless.md)
-
-<img src="./docs/images/signless.png" width="500">
-
+This use-case showcases how we can easily implement Gasless transactions, so the users don't need to have native tokens to execute transactions.

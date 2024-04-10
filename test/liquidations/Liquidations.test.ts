@@ -24,8 +24,7 @@ describe("PerpMock Liquidations contract tests", function () {
   let perpMock: PerpMock;
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
-  let server = serverPyth;
-  let priceFeed:string = priceFeedPyth
+  let priceFeed:string = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", priceFeedPyth
   let price:number;
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
@@ -52,10 +51,11 @@ describe("PerpMock Liquidations contract tests", function () {
     await setBalance(gelatoMsgSender, utils.parseEther("10000000000000"));
     genesisBlock = await hre.ethers.provider.getBlockNumber();
 
-    const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
+     // Get Pyth price data
+  const connection = new EvmPriceServiceConnection(
+    "https://hermes.pyth.network",
 
+ ); // See Price Service endpoints section below for other endpoints
     const priceIds = [
       priceFeed, // ETH/USD price id inmainet
     ];
@@ -68,21 +68,21 @@ describe("PerpMock Liquidations contract tests", function () {
 
 
   it("w3f create order", async () => { 
+
     await perpMock.marginTrade(10,20000,price)
 
     let userArgs = {
       "perpMock": perpMock.address,
       "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50",
-      server: serverPyth
+      "collateralThreshold":"50"
       };
 
     let storage = {
       };
   
      let liquidationsW3f:Web3FunctionHardhat = w3f.get("liquidations");
-     let  w3frun  = await liquidationsW3f.run({ userArgs, storage });
+     let  w3frun  = await liquidationsW3f.run("onRun",{ userArgs, storage });
 
     let result = w3frun.result;
     expect (result.canExec).false
@@ -101,15 +101,14 @@ describe("PerpMock Liquidations contract tests", function () {
       "perpMock": perpMock.address,
       "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50",
-      server: serverPyth
+      "collateralThreshold":"50"
       };
 
     let storage = {
        };
   
      let liquidationsW3f:Web3FunctionHardhat = w3f.get("liquidations");
-     let  w3frun  = await liquidationsW3f.run({ userArgs, storage });
+     let  w3frun  = await liquidationsW3f.run("onRun",{ userArgs, storage });
 
 
     let result = w3frun.result;
@@ -126,8 +125,7 @@ describe("PerpMock Liquidations contract tests", function () {
       "perpMock": perpMock.address,
       "priceIds": [priceFeed ],
       "genesisBlock": genesisBlock.toString(),
-      "collateralThreshold":"50",
-      server: serverPyth
+      "collateralThreshold":"50"
       };
 
     let storage = {
@@ -135,7 +133,7 @@ describe("PerpMock Liquidations contract tests", function () {
       };
   
      let liquidationsW3f:Web3FunctionHardhat = w3f.get("liquidations");
-     let  w3frun  = await liquidationsW3f.run({ userArgs, storage });
+     let  w3frun  = await liquidationsW3f.run("onRun",{ userArgs, storage });
      let result = w3frun.result;
       
     /// First run
@@ -148,7 +146,7 @@ describe("PerpMock Liquidations contract tests", function () {
     storage = w3frun.storage.storage;
 
     
-    w3frun  = await liquidationsW3f.run({ userArgs, storage });
+    w3frun  = await liquidationsW3f.run("onRun",{ userArgs, storage });
     result = w3frun.result;
 
   
@@ -175,7 +173,7 @@ describe("PerpMock Liquidations contract tests", function () {
       };
   
      let liquidationsW3f:Web3FunctionHardhat = w3f.get("liquidations");
-     let  w3frun  = await liquidationsW3f.run({ userArgs, storage });
+     let  w3frun  = await liquidationsW3f.run("onRun",{ userArgs, storage });
      let result = w3frun.result;
       
     /// First run
@@ -187,7 +185,7 @@ describe("PerpMock Liquidations contract tests", function () {
     /// Second run (web3 function when hardhat and second run price deviation 5% )
     storage = w3frun.storage.storage;
 
-    w3frun  = await liquidationsW3f.run({ userArgs, storage });
+    w3frun  = await liquidationsW3f.run("onRun",{ userArgs, storage });
     result = w3frun.result;
 
   

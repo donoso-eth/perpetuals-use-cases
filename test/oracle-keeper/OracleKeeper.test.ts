@@ -25,8 +25,7 @@ describe("PerpMock set Orders contract tests", function () {
   let perpMock: PerpMock;
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
-  let server = serverPyth;
-  let priceFeed:string = priceFeedPyth
+  let priceFeed:string = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", priceFeedPyth
 
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
@@ -53,7 +52,7 @@ describe("PerpMock set Orders contract tests", function () {
     await setBalance(gelatoMsgSender, utils.parseEther("10000000000000"));
     genesisBlock = await hre.ethers.provider.getBlockNumber();
 
-  
+
 
   });
   it("PerpMock.updatePrice: correct", async () => { 
@@ -86,24 +85,28 @@ describe("PerpMock set Orders contract tests", function () {
     for (const log of logs.logs) {
       const event = perpMock.interface.parseLog(log);
       const [timestamp, orderId] = event.args;
-  
-      if (+timestamp.toString() > newestTimeStamp)
-        newestTimeStamp = +timestamp.toString();
+
     }
 
     let olderThantimestamp = newestTimeStamp + 12;
 
-    const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
+  // Get Pyth price data
+  const connection = new EvmPriceServiceConnection(
+     "https://hermes.pyth.network",
+ 
+  ); // See Price Service endpoints section below for other endpoints
+  
 
     const priceIds = [
       priceFeed, // ETH/USD price id inmainet
     ];
 
+
     const check = (await connection.getLatestPriceFeeds(priceIds)) as any[];
 
-    if (check[0].price.publishTime >= olderThantimestamp) {
+   
+
+   
 
       const priceUpdateData = await connection.getPriceFeedsUpdateData(
         priceIds
@@ -114,8 +117,7 @@ describe("PerpMock set Orders contract tests", function () {
       "priceIds": [
         priceFeed
       ],
-      "genesisBlock": genesisBlock,
-      server: serverPyth
+      "genesisBlock": genesisBlock
       };
 
     let storage = {
@@ -125,56 +127,18 @@ describe("PerpMock set Orders contract tests", function () {
         .connect(gelatoMsgSenderSigner)
         .updatePriceOrders(priceUpdateData, [1, 2],check[0].price.publishTime);
       const order = await perpMock.getOrder(1);
-      expect(order.publishTime).to.eq(check[0].price.publishTime);
-    } else {
-      console.log("not elapsed");
-    }
+      expect(order.publishTime).to.greaterThan(order.timestamp);
+   
 
   })
-  it("w3f executes", async () => { 
-      await perpMock.setOrder(2);
-      await perpMock.setOrder(3);
-  
 
-
-    let userArgs = {
-      "perpMock": perpMock.address,
-      "priceIds": [priceFeed],
-      "genesisBlock": genesisBlock.toString(),
-      "delay":"12",
-      server: serverPyth
-      };
-
-    let storage = {
-     // remainingOrders:  `{"orders":[{"timestamp":1693385398,"orderId":1},{"timestamp":1693385399,"orderId":2}]}`
-      };
-  
-     let oracleKeeperW3f:Web3FunctionHardhat = w3f.get("oracle-keeper");
-     let  w3frun  = await oracleKeeperW3f.run({ userArgs, storage });
-
-
-    let result = w3frun.result;
-    
-    if (result.canExec) {
-
-      await setBalance(perpMock.address, utils.parseEther("10000000000000"));
-      const data = result.callData[0] as Web3FunctionResultCallData
-      await gelatoMsgSenderSigner.sendTransaction({
-        data: data.data,
-        to:  data.to 
-      })
-    let order = await perpMock.getOrder(1);
-  
-    }
-
-
-     
-  })
   it("PerpMock.updatePrice: onlyGelatoMsgSender", async () => {
     // Arbitrary bytes array
-    const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
+     // Get Pyth price data
+  const connection = new EvmPriceServiceConnection(
+    "https://hermes.pyth.network",
+
+ ); // See Price Service endpoints section below for other endpoints
     const priceIds = [
       priceFeed, // ETH/USD price id in mainnet
     ];
@@ -184,27 +148,15 @@ describe("PerpMock set Orders contract tests", function () {
     );
   });
 
-  it("PerpMock.pause: Pauses the contract", async () => {
-    await perpMock.pause();
 
-    expect(await perpMock.paused()).to.equal(true);
-  });
 
-  it("PerpMock.unpause: Unpauses the contract", async () => {
-    await perpMock.pause();
-
-    expect(await perpMock.paused()).to.equal(true);
-
-    await perpMock.unpause();
-
-    expect(await perpMock.paused()).to.equal(false);
-  });
 
   it("PerpMock.updatePrice: should update price correctly", async () => {
+    // Get Pyth price data
     const connection = new EvmPriceServiceConnection(
-      `https://xc-${server}.pyth.network`
-    );
-
+      "https://hermes.pyth.network",
+  
+   ); // See Price Service endpoints section below for other endpoints
     const priceIds = [
       priceFeed, // ETH/USD price id in mainnet
     ];

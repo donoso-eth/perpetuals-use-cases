@@ -16,18 +16,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     );
   }
 
-  if (!isHardhat) {
+
     const perp = await deploy("PerpMock", {
       from: deployer,
       args: [
         gelatoMsgSender,
-        pyth
+        pyth,
+        "0xd8253782c45a12053594b9deB72d8e8aB2Fca54c"
       ],
       log: true,
     });
 
     console.log("contract deployed on: " + perp.address);
-  }
+  
 };
 
 func.skip = async () => {

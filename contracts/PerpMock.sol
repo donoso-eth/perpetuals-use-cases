@@ -4,17 +4,19 @@ pragma solidity ^0.8.18;
 import "hardhat/console.sol";
 
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import {Context} from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import {
+    ERC2771Context
+} from "@gelatonetwork/relay-context/contracts/vendor/ERC2771Context.sol";
 
-
-contract PerpMock is  Pausable, Ownable {
+contract PerpMock is ERC2771Context {
 // #region state
     
+    address public owner;
+    uint256 public nrOrders;
+
     struct Order {
         address user;
         uint256 timestamp;
@@ -76,22 +78,35 @@ contract PerpMock is  Pausable, Ownable {
         );
         _;
     }
+
+       modifier onlyOwner() {
+        require(
+            msg.sender == owner,
+            "Only Owner"
+        );
+        _;
+    }
+
+
 // #endregion state
 
     constructor(
         address _gelatoMsgSender,
-        address pythContract
-    )  {
+        address pythContract,
+        address _trustedForwarder
+    ) ERC2771Context(_trustedForwarder) {
         gelatoMsgSender = _gelatoMsgSender;
         _pyth = IPyth(pythContract);
+        owner = msg.sender;
     }
 
 
     // #region ============ ===============  Settle Order Implementation ============= ============= //
     function setOrder(uint256 _amount) external {
         orderId += 1;
+        nrOrders += 1;
         ordersByOrderId[orderId] = Order(
-            msg.sender,
+            _msgSender(),
             block.timestamp,
             _amount,
             0,
@@ -119,7 +134,7 @@ contract PerpMock is  Pausable, Ownable {
         for (uint256 i = 0; i < _orders.length; i++) {
             Order storage order = ordersByOrderId[_orders[i]];
             order.priceSettled = checkPrice.price;
-            order.publishTime = checkPrice.publishTime;
+            order.publishTime =  block.timestamp;
             order.active = false;
             emit settleOrderEvent(order.user, _orders[i]);
         }
@@ -133,6 +148,7 @@ contract PerpMock is  Pausable, Ownable {
         int64 _price,
         bool _above
     ) external {
+        nrOrders += 1;
         conditionalOrderId += 1;
         conditionalOrdersByOrderId[conditionalOrderId] = Order(
             msg.sender,
@@ -197,6 +213,7 @@ contract PerpMock is  Pausable, Ownable {
                 false,
             "Already in a trade"
         );
+        nrOrders += 1;
         marginTradeId += 1;
         int64 tokens = ((int64(uint64(_amount)) * (10 ** 12)) / (_price));
         marginTradesByOrderId[marginTradeId] = Order(
@@ -266,13 +283,7 @@ contract PerpMock is  Pausable, Ownable {
 
     // #endregion ============ =============== ============= ============= ===============  ===============  //
     
-    function pause() external onlyOwner {
-        _pause();
-    }
 
-    function unpause() external onlyOwner {
-        _unpause();
-    }
 
     function withdraw() external onlyOwner returns (bool) {
         (bool result, ) = payable(msg.sender).call{
@@ -310,16 +321,17 @@ contract PerpMock is  Pausable, Ownable {
             checkPrice.price = priceByTimestamp[_timestamp];
         } else {
             uint256 fee = _pyth.getUpdateFee(updatePriceData);
-
+            console.log(fee);
             _pyth.updatePriceFeeds{value: fee}(updatePriceData);
 
-            /* solhint-disable-next-line */
+            // /* solhint-disable-next-line */
             bytes32 priceID = bytes32(
-                //0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
-                0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6
+                0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
             );
 
             checkPrice = _pyth.getPriceUnsafe(priceID);
         }
     }
+
+
 }

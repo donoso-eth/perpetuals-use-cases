@@ -5,9 +5,6 @@
   "timeout": 30,
   "userArgs": {
     "perpMock": "string",
-    "priceIds": "string[]",
-    "genesisBlock":"string",
-    "delay":"string",
-    "server":"string"
+    "priceIds": "string[]"
   }
 }

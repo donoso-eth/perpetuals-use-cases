@@ -39,12 +39,12 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   );
   const server= userArgs.server as string ?? "mainnet";
   
-    console.log('lastProces: ' , await storage.get("lastProcessedBlock"))
+ 
   // User Storage
   const lastProcessedBlock = +(
     (await storage.get("lastProcessedBlock")) ?? genesisBlock
   );
-
+  console.log('lastProces: ' , await storage.get("lastProcessedBlock"))
 
   const remainingOrders: { orders: Array<IORDER> } = JSON.parse(
     (await storage.get("remainingOrders")) ?? `{"orders":[]}`
@@ -59,8 +59,9 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Get Pyth price data
   const connection = new EvmPriceServiceConnection(
-    `https://xc-${server}.pyth.network`
-  );
+    "https://hermes.pyth.network",
+
+ );
   const currentBlock = await provider.getBlockNumber();
 
   const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];

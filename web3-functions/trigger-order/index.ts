@@ -30,7 +30,6 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const perpMock = (userArgs.perpMock as string) ?? "";
   const priceIds = (userArgs.priceIds ?? "") as string[];
   const genesisBlock = +(userArgs.genesisBlock ?? ("0" as string));
-  const server= userArgs.server as string ?? "mainnet";
   // User Storage
   const lastProcessedBlock = +(
     (await storage.get("lastProcessedBlock")) ?? genesisBlock
@@ -46,10 +45,13 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // Get Pyth price data
   const connection = new EvmPriceServiceConnection(
-    `https://xc-${server}.pyth.network`
+    "https://hermes.pyth.network",
   ); // See Price Service endpoints section below for other endpoints
 
+
   const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];
+
+
 
   const priceObject = check[0].toJson().price;
 

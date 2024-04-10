@@ -7,7 +7,6 @@
     "perpMock": "string",
     "priceIds": "string[]",
     "genesisBlock":"string",
-    "collateralThreshold":"string",
-    "server":"string"
+    "collateralThreshold":"string"
   }
 }
