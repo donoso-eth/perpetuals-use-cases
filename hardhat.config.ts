@@ -102,7 +102,7 @@ const config: HardhatUserConfig = {
   // hardhat-deploy
   etherscan: {
     apiKey: {
-      raspberry: "xxx"
+      raspberry: "abc"
     },
     customChains: [
       {

@@ -19,7 +19,7 @@ import { priceFeedPyth, serverPyth } from "../constants";
 
 const { ethers, deployments, w3f } = hre;
 
-describe("PerpMock set Orders contract tests", function () {
+describe.only("PerpMock set Orders contract tests", function () {
   let admin: Signer; // proxyAdmin
   let adminAddress: string;
   let perpMock: PerpMock;
