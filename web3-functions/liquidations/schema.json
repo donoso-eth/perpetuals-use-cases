@@ -5,7 +5,8 @@
   "timeout": 30,
   "userArgs": {
     "perpMock": "string",
-    "priceIds": "string[]",
+    "priceFeed":"string",
+    "priceFeedAdapterAddress": "string",
     "genesisBlock":"string",
     "collateralThreshold":"string"
   }

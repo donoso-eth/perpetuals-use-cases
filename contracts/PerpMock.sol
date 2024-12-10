@@ -1,36 +1,56 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.23;
 
 import "hardhat/console.sol";
 
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
-import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import {
     ERC2771Context
 } from "@gelatonetwork/relay-context/contracts/vendor/ERC2771Context.sol";
 
-contract PerpMock is ERC2771Context {
+interface IOracle {
+ function latestRoundData()
+    external
+    view
+    returns (
+      uint80 roundId,
+      int256 answer,
+      uint256 startedAt,
+      uint256 updatedAt,
+      uint80 answeredInRound
+    );
+}
+
+
+
+contract PerpMock is  ERC2771Context {
 // #region state
     
     address public owner;
     uint256 public nrOrders;
 
+    struct IPrice {
+    int256 price;
+    uint256 publishTime;
+}
+
+
     struct Order {
         address user;
         uint256 timestamp;
         uint256 amount;
-        int64 price;
+        int256 price;
         uint256 publishTime;
         bool above;
         uint256 leverage;
-        int64 priceSettled;
+        int256 priceSettled;
         int64 tokens;
         bool active;
     }
 
-    IPyth private _pyth;
+    IOracle public oracle;
+    
     mapping(uint256 => int64) priceByTimestamp;
 
     // Order Settlement
@@ -92,11 +112,11 @@ contract PerpMock is ERC2771Context {
 
     constructor(
         address _gelatoMsgSender,
-        address pythContract,
+        address _oracleAdapter,
         address _trustedForwarder
     ) ERC2771Context(_trustedForwarder) {
         gelatoMsgSender = _gelatoMsgSender;
-        _pyth = IPyth(pythContract);
+        oracle = IOracle(_oracleAdapter);
         owner = msg.sender;
     }
 
@@ -123,21 +143,19 @@ contract PerpMock is ERC2771Context {
     }
 
     function updatePriceOrders(
-        bytes[] memory updatePriceData,
-        uint256[] memory _orders,
+        uint256 _order,
         uint256 _timestamp
-    ) external onlyGelatoMsgSender {
-        PythStructs.Price memory checkPrice = checkAvailablePrice(
-            updatePriceData,
+    ) onlyGelatoMsgSender  external  {
+        IPrice memory  checkPrice =   checkAvailablePrice(
             _timestamp
         );
-        for (uint256 i = 0; i < _orders.length; i++) {
-            Order storage order = ordersByOrderId[_orders[i]];
+    
+            Order storage order = ordersByOrderId[_order];
             order.priceSettled = checkPrice.price;
             order.publishTime =  block.timestamp;
             order.active = false;
-            emit settleOrderEvent(order.user, _orders[i]);
-        }
+            emit settleOrderEvent(order.user, _order);
+      
     }
 
     // #endregion ============ =============== ============= ============= ===============  ===============  //
@@ -173,12 +191,10 @@ contract PerpMock is ERC2771Context {
     }
 
     function updatePriceConditionalOrders(
-        bytes[] memory updatePriceData,
         uint256[] memory _conditionalOrders,
         uint256 _timestamp
     ) external onlyGelatoMsgSender {
-        PythStructs.Price memory checkPrice = checkAvailablePrice(
-            updatePriceData,
+         IPrice memory  checkPrice =   checkAvailablePrice(
             _timestamp
         );
 
@@ -313,23 +329,17 @@ contract PerpMock is ERC2771Context {
     // internal
 
     function checkAvailablePrice(
-        bytes[] memory updatePriceData,
         uint256 _timestamp
-    ) internal returns (PythStructs.Price memory checkPrice) {
+    ) internal view returns (IPrice memory checkPrice) {
         if (priceByTimestamp[_timestamp] != 0) {
             checkPrice.publishTime = _timestamp;
             checkPrice.price = priceByTimestamp[_timestamp];
         } else {
-            uint256 fee = _pyth.getUpdateFee(updatePriceData);
-            console.log(fee);
-            _pyth.updatePriceFeeds{value: fee}(updatePriceData);
+    
+            (,int256 answer,uint256 startedAt,,) = oracle.latestRoundData();
+            checkPrice.price = answer;
+            checkPrice.publishTime = _timestamp;
 
-            // /* solhint-disable-next-line */
-            bytes32 priceID = bytes32(
-                0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace
-            );
-
-            checkPrice = _pyth.getPriceUnsafe(priceID);
         }
     }
 

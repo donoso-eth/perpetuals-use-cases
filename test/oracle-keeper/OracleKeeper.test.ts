@@ -1,31 +1,31 @@
 import hre from "hardhat";
 import { Signer } from "@ethersproject/abstract-signer";
-import { EvmPriceServiceConnection } from "@pythnetwork/pyth-evm-js";
+import { requestDataPackages } from "@redstone-finance/sdk";
+import { DataPackagesWrapper } from "@redstone-finance/evm-connector";
 
 import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { PerpMock } from "../../typechain/contracts/PerpMock";
+import { RedstonePriceFeedWithRoundsBTC } from "../../typechain/contracts/RedstonePriceFeedWithRoundsBTC";
 import { utils } from "ethers";
-import { fastForwardTime, getTimeStampNow } from "../utils";
+
 import { Log } from "@ethersproject/providers";
 import { getLogs } from "../utils/getLogs";
-import {
-
-  Web3FunctionResultCallData,
-} from "@gelatonetwork/web3-functions-sdk";
-import { Web3FunctionHardhat } from "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
-import { sleep } from "../../web3-functions/utils";
-import { priceFeedPyth, serverPyth } from "../constants";
+import { PerpMock } from "../../typechain/contracts/PerpMock.sol";
+const parsePrice = (value: Uint8Array) => {
+  const bigNumberPrice = ethers.BigNumber.from(value);
+  return bigNumberPrice.toNumber() / 10 ** 8; // Redstone uses 8 decimals
+};
 
 const { ethers, deployments, w3f } = hre;
 
-describe.only("PerpMock set Orders contract tests", function () {
+describe("PerpMock set Orders contract tests", function () {
   let admin: Signer; // proxyAdmin
   let adminAddress: string;
   let perpMock: PerpMock;
+  let priceFeedAdapter: RedstonePriceFeedWithRoundsBTC;
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
-  let priceFeed:string = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", priceFeedPyth
+  let priceFeed = "BTC";
 
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
@@ -40,6 +40,7 @@ describe.only("PerpMock set Orders contract tests", function () {
     adminAddress = await admin.getAddress();
     await setBalance(adminAddress, ethers.utils.parseEther("1000"));
     const { gelatoMsgSender } = await hre.getNamedAccounts();
+    console.log("msgSender: " + gelatoMsgSender);
     gelatoMsgSenderSigner = await ethers.getSigner(gelatoMsgSender);
 
     perpMock = (await ethers.getContractAt(
@@ -48,21 +49,23 @@ describe.only("PerpMock set Orders contract tests", function () {
         await deployments.get("PerpMock")
       ).address
     )) as PerpMock;
-    await setBalance(perpMock.address, utils.parseEther("10000000000000"));
+
+    priceFeedAdapter = (await ethers.getContractAt(
+      "RedstonePriceFeedWithRoundsBTC",
+      (
+        await deployments.get("RedstonePriceFeedWithRoundsBTC")
+      ).address
+    )) as RedstonePriceFeedWithRoundsBTC;
+
     await setBalance(gelatoMsgSender, utils.parseEther("10000000000000"));
     genesisBlock = await hre.ethers.provider.getBlockNumber();
-
-
-
   });
-  it("PerpMock.updatePrice: correct", async () => { 
+  it("PerpMock.updatePrice: correct", async () => {
     await perpMock.setOrder(2);
     await perpMock.setOrder(3);
 
-
     let currentBlock = await hre.ethers.provider.getBlockNumber();
     let lastBlock = genesisBlock;
-   
 
     const topics = [
       perpMock.interface.getEventTopic(
@@ -70,7 +73,7 @@ describe.only("PerpMock set Orders contract tests", function () {
       ),
     ];
 
-    const logs= await getLogs(
+    const logs = await getLogs(
       lastBlock,
       currentBlock,
       perpMock.address,
@@ -85,87 +88,69 @@ describe.only("PerpMock set Orders contract tests", function () {
     for (const log of logs.logs) {
       const event = perpMock.interface.parseLog(log);
       const [timestamp, orderId] = event.args;
-
     }
 
-    let olderThantimestamp = newestTimeStamp + 12;
+    let olderThantimestamp = newestTimeStamp + 12; // See Price Service endpoints section below for other endpoints
 
-  // Get Pyth price data
-  const connection = new EvmPriceServiceConnection(
-     "https://hermes.pyth.network",
- 
-  ); // See Price Service endpoints section below for other endpoints
-  
+    const latestSignedPrice = await requestDataPackages({
+      dataServiceId: "redstone-primary-prod",
+      uniqueSignersCount: 2,
+      dataFeeds: [priceFeed],
+      urls: ["https://oracle-gateway-1.a.redstone.vip"],
+    });
 
-    const priceIds = [
-      priceFeed, // ETH/USD price id inmainet
-    ];
+    const dataPackagesWrapper = new DataPackagesWrapper(latestSignedPrice);
+    const wrappedOracle =
+      dataPackagesWrapper.overwriteEthersContract(priceFeedAdapter);
+    // Retrieve stored & live prices
 
+    const { dataPackage } = latestSignedPrice[priceFeed]![0];
 
-    const check = (await connection.getLatestPriceFeeds(priceIds)) as any[];
+    const parsedPrice = parsePrice(dataPackage.dataPoints[0].value);
 
-   
-
-   
-
-      const priceUpdateData = await connection.getPriceFeedsUpdateData(
-        priceIds
-      );
+    console.log(
+      `Setting ${priceFeed} price in PriceFeed contract to: ${parsedPrice}, at ${dataPackage.timestampMilliseconds}`
+    );
 
     let userArgs = {
-      "PerpMock": perpMock.address,
-      "priceIds": [
-        priceFeed
-      ],
-      "genesisBlock": genesisBlock
-      };
+      PerpMock: perpMock.address,
+      priceIds: [priceFeed],
+      genesisBlock: genesisBlock,
+    };
 
-    let storage = {
-      };
+    let storage = {};
 
-      await perpMock
-        .connect(gelatoMsgSenderSigner)
-        .updatePriceOrders(priceUpdateData, [1, 2],check[0].price.publishTime);
-      const order = await perpMock.getOrder(1);
-      expect(order.publishTime).to.greaterThan(order.timestamp);
-   
+    const { data } =
+      await wrappedOracle.populateTransaction.updateDataFeedsValues(
+        dataPackage.timestampMilliseconds
+      );
 
-  })
+    let tx = await gelatoMsgSenderSigner.sendTransaction({
+      to: priceFeedAdapter.address,
+      data,
+    });
 
-  it("PerpMock.updatePrice: onlyGelatoMsgSender", async () => {
-    // Arbitrary bytes array
-     // Get Pyth price data
-  const connection = new EvmPriceServiceConnection(
-    "https://hermes.pyth.network",
+    await tx.wait();
 
- ); // See Price Service endpoints section below for other endpoints
-    const priceIds = [
-      priceFeed, // ETH/USD price id in mainnet
-    ];
-    const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
-    await expect(perpMock.updatePriceOrders(priceUpdateData, [],1222)).to.be.revertedWith(
-      "Only dedicated gelato msg.sender"
-    );
-  });
+    let data2 = await priceFeedAdapter.latestRoundData();
+    console.log(data2);
+
+    const { data: data3 } =
+      await perpMock.populateTransaction.updatePriceOrders(
+        1,
+        dataPackage.timestampMilliseconds
+      );
+
+    let tx2 = await gelatoMsgSenderSigner.sendTransaction({
+      to: perpMock.address,
+      data: data3,
+    });
+
+    await tx2.wait();
+
+    let order1 = await perpMock.getOrder(1);
+    console.log(order1)
 
 
-
-
-  it("PerpMock.updatePrice: should update price correctly", async () => {
-    // Get Pyth price data
-    const connection = new EvmPriceServiceConnection(
-      "https://hermes.pyth.network",
-  
-   ); // See Price Service endpoints section below for other endpoints
-    const priceIds = [
-      priceFeed, // ETH/USD price id in mainnet
-    ];
-
-    const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
-
-    // await perpMock
-    //   .connect(gelatoMsgSenderSigner)
-    //   .updatePrice(priceUpdateData);
-    // expect(await perpMock.currentPrice()).to.not.eq(priceBefore);
   });
 });

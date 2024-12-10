@@ -8,7 +8,7 @@ export const perpMockAbi = [
       },
       {
         "internalType": "address",
-        "name": "pythContract",
+        "name": "_oracleAdapter",
         "type": "address"
       },
       {
@@ -19,51 +19,6 @@ export const perpMockAbi = [
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "Paused",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "Unpaused",
-    "type": "event"
   },
   {
     "anonymous": false,
@@ -279,9 +234,9 @@ export const perpMockAbi = [
         "type": "uint256"
       },
       {
-        "internalType": "int64",
+        "internalType": "int256",
         "name": "price",
-        "type": "int64"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -299,9 +254,9 @@ export const perpMockAbi = [
         "type": "uint256"
       },
       {
-        "internalType": "int64",
+        "internalType": "int256",
         "name": "priceSettled",
-        "type": "int64"
+        "type": "int256"
       },
       {
         "internalType": "int64",
@@ -382,9 +337,9 @@ export const perpMockAbi = [
             "type": "uint256"
           },
           {
-            "internalType": "int64",
+            "internalType": "int256",
             "name": "price",
-            "type": "int64"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -402,9 +357,9 @@ export const perpMockAbi = [
             "type": "uint256"
           },
           {
-            "internalType": "int64",
+            "internalType": "int256",
             "name": "priceSettled",
-            "type": "int64"
+            "type": "int256"
           },
           {
             "internalType": "int64",
@@ -453,9 +408,9 @@ export const perpMockAbi = [
             "type": "uint256"
           },
           {
-            "internalType": "int64",
+            "internalType": "int256",
             "name": "price",
-            "type": "int64"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -473,9 +428,9 @@ export const perpMockAbi = [
             "type": "uint256"
           },
           {
-            "internalType": "int64",
+            "internalType": "int256",
             "name": "priceSettled",
-            "type": "int64"
+            "type": "int256"
           },
           {
             "internalType": "int64",
@@ -524,9 +479,9 @@ export const perpMockAbi = [
             "type": "uint256"
           },
           {
-            "internalType": "int64",
+            "internalType": "int256",
             "name": "price",
-            "type": "int64"
+            "type": "int256"
           },
           {
             "internalType": "uint256",
@@ -544,9 +499,9 @@ export const perpMockAbi = [
             "type": "uint256"
           },
           {
-            "internalType": "int64",
+            "internalType": "int256",
             "name": "priceSettled",
-            "type": "int64"
+            "type": "int256"
           },
           {
             "internalType": "int64",
@@ -690,9 +645,9 @@ export const perpMockAbi = [
         "type": "uint256"
       },
       {
-        "internalType": "int64",
+        "internalType": "int256",
         "name": "price",
-        "type": "int64"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -710,9 +665,9 @@ export const perpMockAbi = [
         "type": "uint256"
       },
       {
-        "internalType": "int64",
+        "internalType": "int256",
         "name": "priceSettled",
-        "type": "int64"
+        "type": "int256"
       },
       {
         "internalType": "int64",
@@ -748,6 +703,19 @@ export const perpMockAbi = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "nrOrders",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -761,6 +729,19 @@ export const perpMockAbi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oracle",
+    "outputs": [
+      {
+        "internalType": "contract IOracle",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -805,9 +786,9 @@ export const perpMockAbi = [
         "type": "uint256"
       },
       {
-        "internalType": "int64",
+        "internalType": "int256",
         "name": "price",
-        "type": "int64"
+        "type": "int256"
       },
       {
         "internalType": "uint256",
@@ -825,9 +806,9 @@ export const perpMockAbi = [
         "type": "uint256"
       },
       {
-        "internalType": "int64",
+        "internalType": "int256",
         "name": "priceSettled",
-        "type": "int64"
+        "type": "int256"
       },
       {
         "internalType": "int64",
@@ -881,33 +862,6 @@ export const perpMockAbi = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "pause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "paused",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -946,26 +900,6 @@ export const perpMockAbi = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "unpause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "_orderId",
         "type": "uint256"
@@ -989,11 +923,6 @@ export const perpMockAbi = [
   {
     "inputs": [
       {
-        "internalType": "bytes[]",
-        "name": "updatePriceData",
-        "type": "bytes[]"
-      },
-      {
         "internalType": "uint256[]",
         "name": "_conditionalOrders",
         "type": "uint256[]"
@@ -1012,14 +941,9 @@ export const perpMockAbi = [
   {
     "inputs": [
       {
-        "internalType": "bytes[]",
-        "name": "updatePriceData",
-        "type": "bytes[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "_orders",
-        "type": "uint256[]"
+        "internalType": "uint256",
+        "name": "_order",
+        "type": "uint256"
       },
       {
         "internalType": "uint256",

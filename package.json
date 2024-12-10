@@ -71,6 +71,7 @@
     "@noble/curves": "^1.2.0",
     "@openzeppelin/contracts": "^4.9.0",
     "@pythnetwork/pyth-evm-js": "^1.16.1",
-    "@pythnetwork/pyth-sdk-solidity": "^2.2.1"
+    "@pythnetwork/pyth-sdk-solidity": "^2.2.1",
+    "@redstone-finance/evm-connector": "^0.5.1"
   }
 }

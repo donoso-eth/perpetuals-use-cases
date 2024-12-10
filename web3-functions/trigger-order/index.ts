@@ -3,12 +3,11 @@ import {
   Web3Function,
   Web3FunctionContext,
 } from "@gelatonetwork/web3-functions-sdk";
-import { BigNumber, Contract, utils } from "ethers";
-
-import { EvmPriceServiceConnection, PriceFeed } from "@pythnetwork/pyth-evm-js";
+import { BigNumber, Contract, ethers, utils } from "ethers";
 import { getLogs } from "../../test/utils/getLogs";
 import { perpMockAbi } from "../abi/perpMockAbi";
-
+import { requestDataPackages } from "@redstone-finance/sdk";
+import { DataPackagesWrapper } from "@redstone-finance/evm-connector";
 
 interface IPRICE {
   price: number;
@@ -21,6 +20,11 @@ interface IORDER {
   above: boolean;
 }
 
+const parsePrice = (value: Uint8Array) => {
+  const bigNumberPrice = ethers.BigNumber.from(value);
+  return bigNumberPrice.toNumber() / 10 ** 8; // Redstone uses 8 decimals
+}
+
 Web3Function.onRun(async (context: Web3FunctionContext) => {
   const { userArgs, storage, secrets, multiChainProvider } = context;
 
@@ -28,7 +32,11 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // userArgs
   const perpMock = (userArgs.perpMock as string) ?? "";
-  const priceIds = (userArgs.priceIds ?? "") as string[];
+  const priceFeed = userArgs.priceFeed as string;
+  if (priceFeed == undefined){
+    return { canExec:false, message:"No price feed arg"}
+  }
+  const priceFeedAdapterAddress = userArgs.priceFeedAdapterAddress as string;
   const genesisBlock = +(userArgs.genesisBlock ?? ("0" as string));
   // User Storage
   const lastProcessedBlock = +(
@@ -42,30 +50,38 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
   const perpMockContract = new Contract(perpMock, perpMockAbi, provider);
 
 
+  let abi = [
+    "function updateDataFeedsValues(uint256) external",
+    "function getDataServiceId() public pure  override returns (string memory)",
+    "function getUniqueSignersThreshold() public pure returns (uint8)",
+    "function latestRoundData() external view returns (uint80,int256,uint256,int256,uint80)",
+    "function decimals() external view returns (uint8)",
+  ];
+  const priceFeedAdapter = new Contract(priceFeedAdapterAddress, abi, provider);
 
-  // Get Pyth price data
-  const connection = new EvmPriceServiceConnection(
-    "https://hermes.pyth.network",
-  ); // See Price Service endpoints section below for other endpoints
+  const latestSignedPrice = await requestDataPackages({
+    dataServiceId: "redstone-primary-prod",
+    uniqueSignersCount: 2,
+     dataFeeds: [priceFeed],
+    urls: ["https://oracle-gateway-1.a.redstone.vip"],
+  });
 
+  const dataPackagesWrapper = new DataPackagesWrapper(
+    latestSignedPrice
+  );
+  const wrappedOracle = dataPackagesWrapper.overwriteEthersContract(priceFeedAdapter);
+  // Retrieve stored & live prices
 
-  const check = (await connection.getLatestPriceFeeds(priceIds)) as PriceFeed[];
+  const { dataPackage } = latestSignedPrice[priceFeed]![0];
 
+  const lastTimestampPackage = await storage.get("lastTimestampPackage") ?? "0"
 
+  const parsedPrice = parsePrice(dataPackage.dataPoints[0].value);
 
-  const priceObject = check[0].toJson().price;
-
-  if (
-    check.length == 0 ||
-    priceObject == undefined ||
-    priceObject.price == undefined
-  ) {
-    return { canExec: false, message: "No price available" };
-  }
-
+ 
   let price: IPRICE = {
-    price: +priceObject.price,
-    publishTime: priceObject.publish_time,
+    price: +Math.floor(parsedPrice*10**8),
+    publishTime:    dataPackage.timestampMilliseconds,
   };
 
   let orders: Array<IORDER> = [];
@@ -129,14 +145,21 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
 
   // web3 tx preparation
   if (ordersReady.length > 0) {
-    const updatePriceData = await connection.getPriceFeedsUpdateData(priceIds);
+    const { data:priceData } =
+    await wrappedOracle.populateTransaction.updateDataFeedsValues(
+      dataPackage.timestampMilliseconds
+    );
     const callData = perpMockContract.interface.encodeFunctionData(
       "updatePriceConditionalOrders",
-      [updatePriceData, ordersReady, price.publishTime]
+      [ordersReady, price.publishTime]
     );
     return {
       canExec: true,
       callData: [
+        {
+          to: priceFeedAdapterAddress,
+          data:priceData!
+        },
         {
           to: perpMock,
           data: callData,
@@ -153,3 +176,4 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
     };
   }
 });
+

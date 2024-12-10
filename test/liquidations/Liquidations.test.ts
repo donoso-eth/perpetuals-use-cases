@@ -1,20 +1,23 @@
 import hre from "hardhat";
 import { Signer } from "@ethersproject/abstract-signer";
-import { EvmPriceServiceConnection } from "@pythnetwork/pyth-evm-js";
 
 import { setBalance } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { PerpMock } from "../../typechain/contracts/PerpMock";
 import { utils } from "ethers";
-import { fastForwardTime, getTimeStampNow } from "../utils";
-import { Log } from "@ethersproject/providers";
-import { getLogs } from "../utils/getLogs";
+
 import {
   Web3FunctionResultCallData,
 } from "@gelatonetwork/web3-functions-sdk";
 import { Web3FunctionHardhat } from "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
-import { priceFeedPyth, serverPyth } from "../constants";
+import { RedstonePriceFeedWithRoundsBTC } from "../../typechain/contracts/RedstonePriceFeedWithRoundsBTC";
+import { requestDataPackages } from "@redstone-finance/sdk";
+import { DataPackagesWrapper } from "@redstone-finance/evm-connector";
 
+const parsePrice = (value: Uint8Array) => {
+  const bigNumberPrice = ethers.BigNumber.from(value);
+  return bigNumberPrice.toNumber() / 10 ** 8; // Redstone uses 8 decimals
+}
 
 const { ethers, deployments, w3f } = hre;
 
@@ -22,10 +25,11 @@ describe("PerpMock Liquidations contract tests", function () {
   let admin: Signer; // proxyAdmin
   let adminAddress: string;
   let perpMock: PerpMock;
+  let  priceFeedAdapter : RedstonePriceFeedWithRoundsBTC;
+  let priceFeed = "BTC";
   let gelatoMsgSenderSigner: Signer;
   let genesisBlock: number;
-  let priceFeed:string = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", priceFeedPyth
-  let price:number;
+   let price:number;
   beforeEach(async function () {
     if (hre.network.name !== "hardhat") {
       console.error("Test Suite is meant to be run on hardhat only");
@@ -47,21 +51,40 @@ describe("PerpMock Liquidations contract tests", function () {
         await deployments.get("PerpMock")
       ).address
     )) as PerpMock;
+
+    priceFeedAdapter  = (await ethers.getContractAt(
+      "RedstonePriceFeedWithRoundsBTC",
+      (
+        await deployments.get("RedstonePriceFeedWithRoundsBTC")
+      ).address
+    )) as RedstonePriceFeedWithRoundsBTC;
+
+
+
     await setBalance(perpMock.address, utils.parseEther("10000000000000"));
     await setBalance(gelatoMsgSender, utils.parseEther("10000000000000"));
     genesisBlock = await hre.ethers.provider.getBlockNumber();
 
      // Get Pyth price data
-  const connection = new EvmPriceServiceConnection(
-    "https://hermes.pyth.network",
-
- ); // See Price Service endpoints section below for other endpoints
-    const priceIds = [
-      priceFeed, // ETH/USD price id inmainet
-    ];
-
-    const check = (await connection.getLatestPriceFeeds(priceIds)) as any[];
-    price= +(check[0].price.price)
+     const latestSignedPrice = await requestDataPackages({
+      dataServiceId: "redstone-primary-prod",
+      uniqueSignersCount: 2,
+       dataFeeds: [priceFeed],
+      urls: ["https://oracle-gateway-1.a.redstone.vip"],
+    });
+  
+  
+    const dataPackagesWrapper = new DataPackagesWrapper(
+      latestSignedPrice
+    );
+    const wrappedOracle = dataPackagesWrapper.overwriteEthersContract(priceFeedAdapter);
+    // Retrieve stored & live prices
+  
+    const { dataPackage } = latestSignedPrice[priceFeed]![0];
+  
+    const parsedPrice = parsePrice(dataPackage.dataPoints[0].value);
+  
+    price = Math.floor(parsedPrice*10**8);
 
 
   });
@@ -73,7 +96,8 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": [priceFeed ],
+      "priceFeed":priceFeed,
+      "priceFeedAdapterAddress": priceFeedAdapter.address,
       "genesisBlock": genesisBlock.toString(),
       "collateralThreshold":"50"
       };
@@ -99,7 +123,8 @@ describe("PerpMock Liquidations contract tests", function () {
     
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": [priceFeed ],
+      "priceFeed":priceFeed,
+      "priceFeedAdapterAddress": priceFeedAdapter.address,
       "genesisBlock": genesisBlock.toString(),
       "collateralThreshold":"50"
       };
@@ -123,7 +148,8 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": [priceFeed ],
+      "priceFeed":priceFeed,
+      "priceFeedAdapterAddress": priceFeedAdapter.address,
       "genesisBlock": genesisBlock.toString(),
       "collateralThreshold":"50"
       };
@@ -162,10 +188,10 @@ describe("PerpMock Liquidations contract tests", function () {
 
     let userArgs = {
       "perpMock": perpMock.address,
-      "priceIds": [priceFeed ],
+      "priceFeed":priceFeed,
+      "priceFeedAdapterAddress": priceFeedAdapter.address,
       "genesisBlock": genesisBlock.toString(),
       "collateralThreshold":"50",
-      server: serverPyth
       };
 
     let storage = {

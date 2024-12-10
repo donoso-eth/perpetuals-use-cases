@@ -1,4 +1,5 @@
 {
   "perpMock": "0x08EAc96a9Bf825539E0C1Bfa876c942Df0E09671",
-  "priceIds":  [ "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" ]
+  "priceFeed":"string",
+  "priceFeedAdapterAddress": "string" 
 }

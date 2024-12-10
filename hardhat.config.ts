@@ -34,47 +34,44 @@ const config: HardhatUserConfig = {
     gelatoMsgSender: {
       hardhat: "0xbb97656cd5fece3a643335d03c8919d5e7dcd225",
       raspberry:"0xbb97656cd5fece3a643335d03c8919d5e7dcd225"
-    },
-    pyth: {
-      hardhat: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
-      raspberry:"0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
-    },
-
+    }
 
   },
-  defaultNetwork: "hardhat",
+  defaultNetwork: "rootStock",
 
   networks: {
     hardhat: {
       forking: {
-        url:`https://rpc.opcelestia-raspberry.gelato.digital`,
+       // url:`https://public-node.rsk.co`,
+        url: `https://rpc.arb-blueberry.gelato.digital`,
       },
     },
-
+    blueberry: {
+      accounts: PK ? [PK] : [],
+      chainId: 88153591557,
+      url: `https://rpc.arb-blueberry.gelato.digital`,
+    },
+    rootStock: {
+      accounts: PK ? [PK] : [],
+       chainId: 30,
+      // `https://rpc.testnet.rootstock.io/EKl2vnE6zr3xHp6V3AzBd8DckKiZ8t-T`
+      url:`https://public-node.rsk.co`,
+      // chainId: 31,
+      gasPrice: 60000000,
+    },
+    rootStockTestnet: {
+      accounts: PK ? [PK] : [],
+      // chainId: 31,
+      // url: 
+      // `https://rpc.testnet.rootstock.io/EKl2vnE6zr3xHp6V3AzBd8DckKiZ8t-T`
+      url: "https://public-node.testnet.rsk.co",
+      chainId: 31,
+      gasPrice: 60000000,
+    },
     ethereum: {
       accounts: PK ? [PK] : [],
       chainId: 1,
       url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
-    },
-    mumbai: {
-      accounts: PK ? [PK] : [],
-      chainId: 80001,
-      url: `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_ID}`,
-    },
-    polygon: {
-      accounts: PK ? [PK] : [],
-      chainId: 137,
-      url: "https://polygon-rpc.com",
-    },
-    arbitrium:{
-      url:`https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_ID}`,
-      accounts: PK ? [PK] : [],
-      chainId: 42161,
-    },
-    arbitriumGoerli:{
-      url:`https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_ID}`,
-      accounts: PK ? [PK] : [],
-      chainId: 421613,
     },
     raspberry: {
       accounts: PK ? [PK] : [],
@@ -86,9 +83,12 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.18",
+        version: "0.8.23",
         settings: {
-          optimizer: { enabled: true, runs: 200 },
+          optimizer: { enabled: true, runs: 999999 },
+          // Some networks don't support opcode PUSH0, we need to override evmVersion
+          // See https://stackoverflow.com/questions/76328677/remix-returned-error-jsonrpc2-0-errorinvalid-opcode-push0-id24
+          evmVersion: "paris",
         },
       },
     ],
@@ -102,7 +102,9 @@ const config: HardhatUserConfig = {
   // hardhat-deploy
   etherscan: {
     apiKey: {
-      raspberry: "abc"
+      raspberry: "abc",
+      rootStock:"333",
+      blueberry:"XXX"
     },
     customChains: [
       {
@@ -111,6 +113,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://opcelestia-raspberry.gelatoscout.com/api",
           browserURL: "https://opcelestia-raspberry.gelatoscout.com/"
+        }
+      },
+      {
+        network: "rootStock",
+        chainId: 30,
+        urls: {
+          apiURL: "https://rootstock.blockscout.com/api",
+          browserURL: "https://rootstock.blockscout.com/"
+        }
+      },
+      {
+        network: "blueberry",
+        chainId: 88153591557,
+        urls: {
+          apiURL: "https://arb-blueberry.gelatoscout.com/api",
+          browserURL: "https://arb-blueberry.gelatoscout.com"
         }
       }
     ]
